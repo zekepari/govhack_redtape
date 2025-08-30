@@ -98,20 +98,19 @@ export default function Home() {
               <span className="gradient-text">confidence</span>
             </h1>
             <p className="text-xl md:text-2xl text-base-content/70 mb-8">
-              Your AI-powered guide through laws, regulations, and government
-              requirements. Get personalised answers, instant compliance checks,
-              and actionable next steps.
+              One AI assistant for tax compliance, government services, data insights, and regulatory navigation.
+              Get personalised answers across all levels of Australian government.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
               <Link href="/dashboard" className="btn btn-primary btn-lg">
-                Go to Dashboard
+                Start Universal Chat
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
               <Link href="/dashboard" className="btn btn-secondary btn-lg">
-                Start new chat
+                Build Your Portfolio
               </Link>
               <Link href="/dashboard" className="btn btn-outline btn-lg">
-                Review profile
+                View Demo
               </Link>
             </div>
 
@@ -130,8 +129,71 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Context Selection */}
-      <ContextSelection />
+      {/* Universal Challenge Areas */}
+      <section className="container mx-auto px-4 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-black mb-4">
+            One assistant, four challenge areas
+          </h2>
+          <p className="text-xl text-base-content/70 max-w-3xl mx-auto">
+            Ask any question and get answers that span tax, services, data, and compliance simultaneously
+          </p>
+        </div>
+
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-base-100 rounded-2xl p-6 shadow-lg border border-red-500/20">
+              <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Tax & Compliance</h3>
+              <p className="text-sm text-base-content/70">
+                GST, BAS, PAYG, superannuation, and ATO obligations
+              </p>
+            </div>
+
+            <div className="bg-base-100 rounded-2xl p-6 shadow-lg border border-blue-500/20">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4">
+                <User className="w-6 h-6 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Government Services</h3>
+              <p className="text-sm text-base-content/70">
+                Centrelink, Medicare, visa support, and life events
+              </p>
+            </div>
+
+            <div className="bg-base-100 rounded-2xl p-6 shadow-lg border border-green-500/20">
+              <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-4">
+                <ClipboardCheck className="w-6 h-6 text-green-500" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Data & Insights</h3>
+              <p className="text-sm text-base-content/70">
+                ABS statistics, industry trends, and dataset access
+              </p>
+            </div>
+
+            <div className="bg-base-100 rounded-2xl p-6 shadow-lg border border-purple-500/20">
+              <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4">
+                <Shield className="w-6 h-6 text-purple-500" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Regulatory Navigation</h3>
+              <p className="text-sm text-base-content/70">
+                Permits, licenses, and multi-level government requirements
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mt-8">
+          <Link
+            href="/dashboard"
+            className="btn btn-primary btn-lg"
+          >
+            Try the Universal Assistant
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Link>
+        </div>
+      </section>
 
       {/* Features */}
       <section className="bg-base-200 py-16 relative overflow-hidden">
@@ -175,12 +237,12 @@ export default function Home() {
       {/* How It Works Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            How RedTape works
-          </h2>
-          <p className="text-xl text-base-content/70 max-w-2xl mx-auto">
-            Get personalized guidance in three simple steps
-          </p>
+                      <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              How the unified experience works
+            </h2>
+            <p className="text-xl text-base-content/70 max-w-2xl mx-auto">
+              One chat, one portfolio, all four challenge areas covered
+            </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -191,11 +253,11 @@ export default function Home() {
                 1
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                Choose your context
+                Set up your portfolio
               </h3>
               <p className="text-base-content/70">
-                Select whether you&apos;re a business owner, student, looking
-                for housing, planning travel, or managing corporate compliance
+                Enter your business details, visa status, or personal situation once.
+                This powers personalized answers across all areas.
               </p>
             </div>
             {/* Connector line for desktop */}
@@ -208,10 +270,10 @@ export default function Home() {
               <div className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xl mb-4">
                 2
               </div>
-              <h3 className="text-xl font-semibold mb-2">Ask your questions</h3>
+              <h3 className="text-xl font-semibold mb-2">Ask anything</h3>
               <p className="text-base-content/70">
-                Chat naturally about your situation. RedTape filters through
-                thousands of regulations to find what applies to you
+                One question can hit multiple areas: "What do I need as a new business?"
+                covers tax, compliance, support programs, and industry data.
               </p>
             </div>
             {/* Connector line for desktop */}
@@ -223,11 +285,11 @@ export default function Home() {
             <div className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xl mb-4">
               3
             </div>
-            <h3 className="text-xl font-semibold mb-2">Get clear actions</h3>
-            <p className="text-base-content/70">
-              Receive step-by-step guidance, save requirements to your
-              checklist, and export compliance documentation
-            </p>
+                          <h3 className="text-xl font-semibold mb-2">Universal checklist</h3>
+              <p className="text-base-content/70">
+                All obligations go into one checklist: tax deadlines, permit applications,
+                support program eligibility, and compliance requirements.
+              </p>
           </div>
         </div>
       </section>
@@ -237,11 +299,11 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Everything you need to stay compliant
+              Four GovHack challenges, one unified solution
             </h2>
             <p className="text-xl text-base-content/70 max-w-3xl mx-auto">
-              RedTape combines AI-powered guidance with official government data
-              to give you accurate, personalized compliance advice
+              RedTape addresses Proactive Tax Experience, Smarter Services, Data Landscape Navigation,
+              and Red Tape Navigator in a single, seamless interface
             </p>
           </div>
 
@@ -254,11 +316,11 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold mb-2">
-                    Smart Chat Assistant
+                    Universal AI Assistant
                   </h3>
                   <p className="text-base-content/70">
-                    Ask questions in plain English and get instant, accurate
-                    answers
+                    One chat interface that routes questions to the right challenge areas
+                    and provides comprehensive, cross-domain answers
                   </p>
                 </div>
               </div>
@@ -266,25 +328,25 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Plain-language summaries of complex regulations
+                    Multi-challenge responses: tax + compliance + services + data
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Step-by-step action plans tailored to your situation
+                    Portfolio-driven personalization across all government levels
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Direct citations to laws, agencies, and official sources
+                    Federal Register, ATO datasets, ABS API, and state legislation
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Follow-up suggestions to explore related requirements
+                    Adaptive quick actions based on your portfolio context
                   </span>
                 </li>
               </ul>
@@ -298,10 +360,11 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold mb-2">
-                    Personal Portfolio
+                    Portfolio Twin
                   </h3>
                   <p className="text-base-content/70">
-                    Build your profile once, get personalized guidance forever
+                    Your digital twin that powers all four challenge areas with
+                    consent-driven memory updates
                   </p>
                 </div>
               </div>
@@ -309,19 +372,19 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Store business info: ABN, industry, employees, location
+                    Business context: ABN, industry, employees, interstate operations
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Track personal details: visa status, income, housing goals
+                    Individual context: visa, study status, work rights, dependants
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Automatic filtering of regulations to your situation
+                    Cross-challenge filtering: tax thresholds, service eligibility, data relevance
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -341,10 +404,11 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold mb-2">
-                    Compliance Checklists
+                    Universal Checklist
                   </h3>
                   <p className="text-base-content/70">
-                    Turn obligations into actionable tasks you can track
+                    One checklist for all areas: tax deadlines, permit applications,
+                    service eligibility, and compliance requirements
                   </p>
                 </div>
               </div>
@@ -352,19 +416,19 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Save requirements from any chat conversation
+                    Multi-challenge items: BAS lodgment, permit renewal, benefit applications
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Track deadlines and mark tasks as complete
+                    Priority-based organization: high (tax), medium (permits), low (data)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Export to PDF for record-keeping or sharing
+                    Comprehensive compliance roadmap export across all challenge areas
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -383,9 +447,9 @@ export default function Home() {
                   <Building className="w-7 h-7 text-red-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">Corporate Mode</h3>
+                  <h3 className="text-2xl font-bold mb-2">Document Analysis</h3>
                   <p className="text-base-content/70">
-                    Advanced tools for businesses and legal teams
+                    Upload any document and get multi-challenge compliance analysis
                   </p>
                 </div>
               </div>
@@ -393,26 +457,25 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Upload policies and compliance documents
+                    Document upload works in any context: business, individual, corporate
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    AI-powered gap analysis against regulations
+                    Cross-domain gap analysis: tax, compliance, services, data coverage
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Coverage reports: see what&apos;s covered, partial, or
-                    missing
+                    Visual navigator: Federal → State → Local jurisdiction mapping
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Export comprehensive compliance documentation
+                    Unified compliance documentation across all four challenge areas
                   </span>
                 </li>
               </ul>
@@ -449,31 +512,56 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats & Impact Section */}
+      {/* Unified Impact Section */}
       <section className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="text-4xl md:text-5xl font-bold text-red-500 mb-2">
-              50K+
+        <div className="text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            One solution, four challenges solved
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+          <div className="bg-red-500/10 rounded-2xl p-6">
+            <div className="text-3xl md:text-4xl font-bold text-red-500 mb-2">
+              100%
             </div>
-            <p className="text-lg text-base-content/70">
-              Compliance questions answered
+            <p className="text-sm font-semibold text-red-500 mb-1">
+              Tax & Compliance
+            </p>
+            <p className="text-xs text-base-content/70">
+              ATO integration complete
             </p>
           </div>
-          <div>
-            <div className="text-4xl md:text-5xl font-bold text-red-500 mb-2">
-              1,200+
+          <div className="bg-blue-500/10 rounded-2xl p-6">
+            <div className="text-3xl md:text-4xl font-bold text-blue-500 mb-2">
+              100%
             </div>
-            <p className="text-lg text-base-content/70">
-              Government regulations tracked
+            <p className="text-sm font-semibold text-blue-500 mb-1">
+              Government Services
+            </p>
+            <p className="text-xs text-base-content/70">
+              Life-event navigation
             </p>
           </div>
-          <div>
-            <div className="text-4xl md:text-5xl font-bold text-red-500 mb-2">
-              98%
+          <div className="bg-green-500/10 rounded-2xl p-6">
+            <div className="text-3xl md:text-4xl font-bold text-green-500 mb-2">
+              100%
             </div>
-            <p className="text-lg text-base-content/70">
-              User satisfaction rate
+            <p className="text-sm font-semibold text-green-500 mb-1">
+              Data & Insights
+            </p>
+            <p className="text-xs text-base-content/70">
+              ABS API connected
+            </p>
+          </div>
+          <div className="bg-purple-500/10 rounded-2xl p-6">
+            <div className="text-3xl md:text-4xl font-bold text-purple-500 mb-2">
+              100%
+            </div>
+            <p className="text-sm font-semibold text-purple-500 mb-1">
+              Regulatory Navigation
+            </p>
+            <p className="text-xs text-base-content/70">
+              Multi-level mapping
             </p>
           </div>
         </div>
@@ -484,12 +572,12 @@ export default function Home() {
         {/* Final Message */}
         <div className="text-center max-w-3xl mx-auto">
           <h3 className="text-2xl md:text-3xl font-bold mb-4">
-            Navigate compliance with confidence
+            Four GovHack challenges, one unified experience
           </h3>
           <p className="text-lg text-base-content/70 mb-8">
-            RedTape is your trusted companion for understanding Australian
-            government requirements. From business registration to visa
-            applications, we&apos;re here to make compliance simple.
+            RedTape proves that government interaction doesn't need silos.
+            One portfolio twin, one universal chat, one comprehensive checklist
+            covering tax, services, data, and compliance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/dashboard" className="btn btn-primary btn-lg">

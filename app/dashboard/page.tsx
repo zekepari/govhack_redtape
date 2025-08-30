@@ -28,8 +28,22 @@ import {
   AlertTriangle,
   AlertCircle,
 } from "lucide-react";
-import { usePortfolio, type ContextMode } from "../contexts/PortfolioContext";
+import { usePortfolio, type ContextMode, type ChecklistItem } from "../contexts/PortfolioContext";
 import { MemoryToast } from "../components/MemoryToast";
+
+type ChallengeArea = "tax" | "services" | "data" | "compliance";
+
+interface Citation {
+  title: string;
+  source: "Federal Register" | "ATO Dataset" | "ABS API" | "State Legislation";
+  url?: string;
+}
+
+interface Jurisdiction {
+  level: "federal" | "state" | "local";
+  name: string;
+  role: string;
+}
 
 interface ChatMessage {
   id: string;
@@ -37,12 +51,33 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   metadata?: {
+    // Multi-challenge coverage
+    challengeAreas?: ChallengeArea[];
+    
+    // Portfolio context chips
     appliesTo?: string[];
-    citations?: string[];
+    
+    // Universal features
     actions?: string[];
+    citations?: Citation[];
+    
+    // Visual navigator
+    jurisdictions?: Jurisdiction[];
+    
+    // Quick actions (adaptive)
     quickSuggestions?: string[];
+    
+    // Checklist items
+    checklistItems?: Array<{
+      title: string;
+      description?: string;
+      dueDate?: string;
+      agency: string;
+      priority: "high" | "medium" | "low";
+      category: ChallengeArea;
+    }>;
   };
-  showForm?: "abn" | "business-details" | "document-upload";
+  showForm?: "abn" | "business-details" | "document-upload" | "portfolio-setup";
 }
 
 interface BusinessContext {
@@ -70,6 +105,47 @@ interface CorporateContext {
   }>;
 }
 
+// Challenge area colors and labels
+const challengeConfig = {
+  tax: { label: "Tax & Compliance", color: "bg-red-500", textColor: "text-red-500" },
+  services: { label: "Government Services", color: "bg-blue-500", textColor: "text-blue-500" },
+  data: { label: "Data & Insights", color: "bg-green-500", textColor: "text-green-500" },
+  compliance: { label: "Regulatory Navigation", color: "bg-purple-500", textColor: "text-purple-500" },
+};
+
+// AI routing logic
+const analyzeQuestion = (question: string, portfolio: any): ChallengeArea[] => {
+  const challengeAreas: ChallengeArea[] = [];
+  const lowerQuestion = question.toLowerCase();
+  
+  // Tax keywords
+  if (/\b(tax|gst|bas|abn|payg|super|deduction|ato|quarterly|annual|return)\b/i.test(lowerQuestion)) {
+    challengeAreas.push("tax");
+  }
+  
+  // Services keywords  
+  if (/\b(support|benefit|payment|job|unemployed|study|visa|centrelink|medicare|services|apply)\b/i.test(lowerQuestion)) {
+    challengeAreas.push("services");
+  }
+  
+  // Data keywords
+  if (/\b(data|dataset|stats|statistics|api|abs|research|insights|trends|numbers)\b/i.test(lowerQuestion)) {
+    challengeAreas.push("data");
+  }
+  
+  // Compliance keywords
+  if (/\b(permit|license|regulation|compliance|agency|law|legal|requirement|obligation|council)\b/i.test(lowerQuestion)) {
+    challengeAreas.push("compliance");
+  }
+  
+  // If no specific area detected, default to compliance
+  if (challengeAreas.length === 0) {
+    challengeAreas.push("compliance");
+  }
+  
+  return challengeAreas;
+};
+
 const contextOptions = [
   { id: "business", icon: Briefcase, label: "Business", color: "bg-red-500" },
   {
@@ -89,10 +165,12 @@ const contextOptions = [
 ];
 
 export default function DashboardPage() {
-  const { state, switchContext } = usePortfolio();
-  const [selectedContext, setSelectedContext] = useState<ContextMode>(
-    state.contextMode
-  );
+  const { state, switchContext, addChecklistItem, toggleChecklistItem, removeChecklistItem } = usePortfolio();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showMemoryToast, setShowMemoryToast] = useState(false);
   const [businessContext, setBusinessContext] = useState<BusinessContext>({});
@@ -112,8 +190,16 @@ export default function DashboardPage() {
       id: "welcome",
       role: "assistant",
       content:
-        "Hi! I'm your RedTape assistant. I'm here to help you navigate Australian compliance requirements. What type of business are you running?",
+        "Hi! I'm your RedTape assistant. I can help you with tax compliance, government services, data insights, and regulatory navigation across all levels of Australian government. What would you like to know?",
       timestamp: new Date(),
+      metadata: {
+        quickSuggestions: [
+          "How do I register for GST?",
+          "What support is available after job loss?",
+          "Show me employment statistics for my area",
+          "What permits do I need for my business?",
+        ],
+      },
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
@@ -143,50 +229,62 @@ export default function DashboardPage() {
     setInputMessage("");
     setIsTyping(true);
 
-    // Detect business context
+    // Universal AI routing and response generation
     setTimeout(() => {
+      const challengeAreas = analyzeQuestion(currentInput, state.portfolio);
       let aiResponse: ChatMessage;
 
+      // Multi-challenge response logic
       if (
-        currentInput.toLowerCase().includes("painting") &&
-        currentInput.toLowerCase().includes("qld")
+        (currentInput.toLowerCase().includes("painting") || currentInput.toLowerCase().includes("painter")) &&
+        (currentInput.toLowerCase().includes("qld") || currentInput.toLowerCase().includes("queensland")) &&
+        currentInput.toLowerCase().includes("employees")
       ) {
         aiResponse = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content:
-            "Great! A painting business in Queensland. To give you the most accurate compliance guidance, do you have an ABN? Entering your ABN helps me identify your specific business details and find relevant regulations, licensing requirements, and local council rules.",
+            "Great! A painting business in Queensland. I can help you with tax obligations, licensing requirements, government support programs, and industry data. To give you personalized guidance across all these areas, do you have an ABN?",
           timestamp: new Date(),
           showForm: "abn",
+          metadata: {
+            challengeAreas: ["tax", "compliance", "services", "data"],
+            appliesTo: ["Painting Business", "Queensland"],
+          },
         };
       } else if (
-        selectedContext === "corporate" &&
-        (currentInput.toLowerCase().includes("development") ||
-          currentInput.toLowerCase().includes("brisbane") ||
-          currentInput.toLowerCase().includes("project"))
+        currentInput.toLowerCase().includes("development") ||
+        currentInput.toLowerCase().includes("brisbane") ||
+        currentInput.toLowerCase().includes("project")
       ) {
         aiResponse = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content:
-            "I can help you with compliance analysis for your Brisbane development project! To provide a comprehensive compliance review, I'll need to analyze your project documentation.\n\nPlease upload your project documents (policies, plans, permits, etc.) and I'll scan them against relevant regulations to identify coverage gaps.",
+            "I can help you with development compliance, including regulatory requirements, tax implications, relevant datasets, and available government support. Would you like to upload project documents for comprehensive analysis?",
           timestamp: new Date(),
           showForm: "document-upload",
+          metadata: {
+            challengeAreas: ["compliance", "tax", "data", "services"],
+          },
         };
       } else {
+        // Generate multi-challenge response
+        const responseContent = generateUniversalResponse(currentInput, challengeAreas, state.portfolio);
+        
         aiResponse = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: `I can help you with that! Based on your ${selectedContext} context, here's what you need to know about "${currentInput}".`,
+          content: responseContent.content,
           timestamp: new Date(),
           metadata: {
-            appliesTo: ["Business QLD"],
-            quickSuggestions: [
-              "What licenses do I need?",
-              "Fair Work obligations",
-              "Tax requirements",
-              "Safety regulations",
-            ],
+            challengeAreas,
+            appliesTo: responseContent.appliesTo,
+            actions: responseContent.actions,
+            citations: responseContent.citations,
+            jurisdictions: responseContent.jurisdictions,
+            quickSuggestions: responseContent.quickSuggestions,
+            checklistItems: responseContent.checklistItems,
           },
         };
       }
@@ -194,6 +292,78 @@ export default function DashboardPage() {
       setMessages((prev) => [...prev, aiResponse]);
       setIsTyping(false);
     }, 1500);
+  };
+
+  // Universal response generator
+  const generateUniversalResponse = (question: string, challengeAreas: ChallengeArea[], portfolio: any) => {
+    const lowerQuestion = question.toLowerCase();
+    
+    // Sample responses that cover multiple challenge areas
+    if (lowerQuestion.includes("gst") || lowerQuestion.includes("register")) {
+      return {
+        content: `GST registration affects multiple aspects of your business:\n\n**Tax Compliance:** You need to register if your turnover exceeds $75,000\n**Government Services:** Access to business support programs\n**Data Insights:** Your industry has a 23% GST registration rate\n**Regulatory Requirements:** State-specific licensing may also apply`,
+        appliesTo: portfolio.business ? [`${portfolio.business.businessName || 'Your Business'}`, portfolio.business.state || 'Australia'] : ['Business Owner'],
+        actions: [
+          "Register for GST via ATO Business Portal",
+          "Set up quarterly BAS reporting",
+          "Review state licensing requirements",
+          "Explore business support programs"
+        ],
+        citations: [
+          { title: "GST Registration Requirements", source: "ATO Dataset" as const },
+          { title: "Business Support Programs", source: "Federal Register" as const },
+          { title: "Industry Statistics", source: "ABS API" as const }
+        ],
+        jurisdictions: [
+          { level: "federal" as const, name: "Australian Taxation Office", role: "GST Registration" },
+          { level: "state" as const, name: portfolio.business?.state || "State Government", role: "Business Licensing" },
+          { level: "local" as const, name: portfolio.business?.localGov || "Local Council", role: "Permits & Approvals" }
+        ],
+        quickSuggestions: [
+          "How do I lodge my first BAS?",
+          "What business grants are available?",
+          "Show me industry benchmarks",
+          "What local permits do I need?"
+        ],
+        checklistItems: [
+          {
+            title: "Register for GST",
+            description: "Complete GST registration via ATO",
+            agency: "Australian Taxation Office",
+            priority: "high" as const,
+            category: "tax" as const
+          },
+          {
+            title: "Set up BAS reporting",
+            description: "Configure quarterly business activity statements",
+            agency: "Australian Taxation Office",
+            priority: "high" as const,
+            category: "tax" as const
+          }
+        ]
+      };
+    }
+    
+    // Default universal response
+    return {
+      content: `I can help you with "${question}" across multiple areas:\n\n${challengeAreas.map(area => `**${challengeConfig[area].label}:** Relevant requirements and opportunities`).join('\n')}\n\nWhat specific aspect would you like to explore first?`,
+      appliesTo: portfolio.business ? [`${portfolio.business.businessName || 'Your Business'}`] : ['Individual'],
+      actions: ["Explore specific requirements", "Review applicable regulations", "Check available support"],
+      citations: [{ title: "Australian Government Requirements", source: "Federal Register" as const }],
+      jurisdictions: [
+        { level: "federal" as const, name: "Australian Government", role: "Policy & Legislation" },
+        { level: "state" as const, name: "State Government", role: "Implementation" },
+        { level: "local" as const, name: "Local Government", role: "Local Requirements" }
+      ],
+      quickSuggestions: challengeAreas.map(area => `Tell me more about ${challengeConfig[area].label.toLowerCase()}`),
+      checklistItems: []
+    };
+  };
+
+  const handleAddToChecklist = (item: any) => {
+    addChecklistItem(item);
+    // Show confirmation toast
+    setShowMemoryToast(true);
   };
 
   const handleAbnSubmit = () => {
@@ -373,9 +543,8 @@ export default function DashboardPage() {
     }, 3000);
   };
 
-  const selectedContextOption = contextOptions.find(
-    (c) => c.id === selectedContext
-  );
+  // Remove context selection - we now use universal chat
+  const selectedContextOption = { icon: Bot, label: "Universal", color: "bg-primary" };
 
   return (
     <div className="drawer lg:drawer-open min-h-screen">
@@ -406,81 +575,126 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Context Switcher */}
+          {/* Portfolio Summary */}
           <div className="p-4 border-b border-base-300">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">
-              Switch Context
+              Your Portfolio
             </h3>
-            <div className="space-y-1">
-              {contextOptions.map((context) => {
-                const Icon = context.icon;
-                const isActive = selectedContext === context.id;
-                return (
-                  <button
-                    key={context.id}
-                    onClick={() => {
-                      setSelectedContext(context.id);
-                      switchContext(context.id);
-                      // Reset chat and business context when switching
-                      setMessages([
-                        {
-                          id: "welcome-" + context.id,
-                          role: "assistant",
-                          content: `Switched to ${
-                            context.label
-                          } mode! I can help you with ${context.label.toLowerCase()} compliance requirements. What would you like to know?`,
-                          timestamp: new Date(),
-                        },
-                      ]);
-                      setBusinessContext({});
-                    }}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                      isActive
-                        ? "bg-primary text-white shadow-sm"
-                        : "hover:bg-base-200"
-                    }`}
-                  >
-                    <div
-                      className={`w-6 h-6 rounded flex items-center justify-center ${
-                        isActive ? "bg-white/20" : context.color
-                      }`}
-                    >
-                      <Icon className="w-3 h-3 text-white" />
-                    </div>
-                    <span
-                      className={`text-sm ${isActive ? "font-semibold" : ""}`}
-                    >
-                      {context.label}
+            <div className="space-y-2">
+              {state.portfolio.business && (
+                <div className="bg-base-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">
+                      {state.portfolio.business.businessName || "Business"}
                     </span>
-                    {isActive && (
-                      <span className="text-xs ml-auto opacity-75">●</span>
-                    )}
+                  </div>
+                  {state.portfolio.business.industry && (
+                    <p className="text-xs text-base-content/70 mt-1">
+                      {state.portfolio.business.industry}
+                    </p>
+                  )}
+                </div>
+              )}
+              {state.portfolio.individual && (
+                <div className="bg-base-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Individual</span>
+                  </div>
+                  {state.portfolio.individual.visaType && (
+                    <p className="text-xs text-base-content/70 mt-1">
+                      {state.portfolio.individual.visaType}
+                    </p>
+                  )}
+                </div>
+              )}
+              {!state.portfolio.business && !state.portfolio.individual && (
+                <div className="text-center py-4">
+                  <p className="text-sm text-base-content/70">
+                    No portfolio data yet
+                  </p>
+                  <button className="btn btn-xs btn-primary mt-2">
+                    Set up profile
                   </button>
-                );
-              })}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Checklist Preview */}
+          {/* Universal Checklist */}
           <div className="p-4 flex-1">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
-                Your Checklist
+                Universal Checklist
               </h3>
-              <Link href="/dashboard" className="btn btn-ghost btn-xs">
-                View All
-              </Link>
+              <span className="text-xs text-base-content/70">
+                {state.checklist.length} items
+              </span>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-success" />
-                <span>1 completed</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 border-2 border-warning rounded"></div>
-                <span>3 pending</span>
-              </div>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {state.checklist.slice(0, 5).map((item) => (
+                <div key={item.id} className="bg-base-200 rounded p-2">
+                  <div className="flex items-start gap-2">
+                    <button
+                      onClick={() => toggleChecklistItem(item.id)}
+                      className={`w-4 h-4 rounded border-2 flex-shrink-0 mt-0.5 ${
+                        item.completed
+                          ? "bg-success border-success"
+                          : "border-base-content/30"
+                      }`}
+                    >
+                      {item.completed && (
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-medium ${
+                        item.completed ? "line-through opacity-60" : ""
+                      }`}>
+                        {item.title}
+                      </p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className={`text-xs px-1 py-0.5 rounded text-white ${
+                          item.category === "tax" ? "bg-red-500" :
+                          item.category === "services" ? "bg-blue-500" :
+                          item.category === "data" ? "bg-green-500" :
+                          item.category === "compliance" ? "bg-purple-500" :
+                          "bg-gray-500"
+                        }`}>
+                          {challengeConfig[item.category]?.label || item.category}
+                        </span>
+                        <span className={`text-xs px-1 py-0.5 rounded ${
+                          item.priority === "high" ? "bg-error" :
+                          item.priority === "medium" ? "bg-warning" : "bg-info"
+                        } text-white`}>
+                          {item.priority}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {state.checklist.length === 0 && (
+                <div className="text-center py-4">
+                  <p className="text-xs text-base-content/70">
+                    No checklist items yet
+                  </p>
+                  <p className="text-xs text-base-content/50 mt-1">
+                    Items will appear here from chat conversations
+                  </p>
+                </div>
+              )}
+              
+              {state.checklist.length > 5 && (
+                <div className="text-center">
+                  <button className="text-xs text-primary hover:underline">
+                    View all {state.checklist.length} items
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -518,9 +732,9 @@ export default function DashboardPage() {
                       >
                         <selectedContextOption.icon className="w-3 h-3 text-white" />
                       </div>
-                      <span className="font-medium">
-                        {selectedContextOption.label} Assistant
-                      </span>
+                                        <span className="font-medium">
+                    RedTape Universal Assistant
+                  </span>
                     </>
                   )}
                 </div>
@@ -532,11 +746,20 @@ export default function DashboardPage() {
                       id: "welcome-new",
                       role: "assistant",
                       content:
-                        "Hi! I'm your RedTape assistant. I'm here to help you navigate Australian compliance requirements. What type of business are you running?",
+                        "Hi! I'm your RedTape assistant. I can help you with tax compliance, government services, data insights, and regulatory navigation across all levels of Australian government. What would you like to know?",
                       timestamp: new Date(),
+                      metadata: {
+                        quickSuggestions: [
+                          "How do I register for GST?",
+                          "What support is available after job loss?",
+                          "Show me employment statistics for my area",
+                          "What permits do I need for my business?",
+                        ],
+                      },
                     },
                   ]);
                   setBusinessContext({});
+                  setCorporateContext({});
                 }}
                 className="btn btn-ghost btn-sm"
               >
@@ -579,7 +802,11 @@ export default function DashboardPage() {
                                 : "RedTape Assistant"}
                             </span>
                             <span className="text-xs text-base-content/50">
-                              {message.timestamp.toLocaleTimeString()}
+                              {isClient ? message.timestamp.toLocaleTimeString('en-AU', { 
+                                hour: '2-digit', 
+                                minute: '2-digit',
+                                hour12: false 
+                              }) : '--:--'}
                             </span>
                           </div>
 
@@ -588,6 +815,26 @@ export default function DashboardPage() {
                               {message.content}
                             </p>
                           </div>
+
+                          {/* Challenge Area Tags */}
+                          {message.metadata?.challengeAreas && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {message.metadata.challengeAreas.map((area) => (
+                                <span
+                                  key={area}
+                                  className={`badge badge-sm text-white ${
+                                    area === "tax" ? "bg-red-500" :
+                                    area === "services" ? "bg-blue-500" :
+                                    area === "data" ? "bg-green-500" :
+                                    area === "compliance" ? "bg-purple-500" :
+                                    "bg-gray-500"
+                                  }`}
+                                >
+                                  {challengeConfig[area]?.label}
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
                           {/* ABN Form */}
                           {message.showForm === "abn" && (
@@ -810,7 +1057,15 @@ export default function DashboardPage() {
                                             <span className="text-sm">
                                               {action}
                                             </span>
-                                            <button className="btn btn-xs btn-primary btn-outline ml-2">
+                                            <button 
+                                              onClick={() => handleAddToChecklist({
+                                                title: action,
+                                                agency: "Government Agency",
+                                                priority: "medium",
+                                                category: message.metadata?.challengeAreas?.[0] || "compliance"
+                                              })}
+                                              className="btn btn-xs btn-primary ml-2"
+                                            >
                                               <Plus className="w-3 h-3" />
                                               Add to checklist
                                             </button>
@@ -828,48 +1083,83 @@ export default function DashboardPage() {
                                   <p className="text-sm font-semibold mb-2 text-info">
                                     Sources & Citations:
                                   </p>
-                                  <div className="space-y-1">
+                                  <div className="space-y-2">
                                     {message.metadata.citations.map(
                                       (citation, i) => (
-                                        <Link
-                                          key={i}
-                                          href="/dashboard"
-                                          className="flex items-center gap-2 text-sm text-info hover:underline"
-                                        >
-                                          <ExternalLink className="w-3 h-3" />
-                                          {citation}
-                                        </Link>
+                                        <div key={i} className="flex items-start gap-2">
+                                          <ExternalLink className="w-3 h-3 text-info mt-0.5 flex-shrink-0" />
+                                          <div>
+                                            <Link
+                                              href={citation.url || "/dashboard"}
+                                              className="text-sm text-info hover:underline font-medium"
+                                            >
+                                              {citation.title}
+                                            </Link>
+                                            <p className="text-xs text-info/70">
+                                              {citation.source}
+                                            </p>
+                                          </div>
+                                        </div>
                                       )
                                     )}
                                   </div>
                                 </div>
                               )}
 
-                              {/* Visual Navigator */}
-                              {businessContext.state && (
+                              {/* Jurisdictions Navigator */}
+                              {message.metadata.jurisdictions && (
                                 <div className="bg-base-200 rounded-lg p-4">
                                   <p className="text-sm font-semibold mb-3">
                                     Regulatory Pathway:
                                   </p>
-                                  <div className="flex items-center gap-2 text-xs">
-                                    <span className="badge badge-error">
-                                      Federal (ATO)
-                                    </span>
-                                    <ChevronRight className="w-3 h-3" />
-                                    <span className="badge badge-warning">
-                                      Queensland
-                                    </span>
-                                    <ChevronRight className="w-3 h-3" />
-                                    <span className="badge badge-success">
-                                      {businessContext.localGov}
-                                    </span>
+                                  <div className="flex items-center gap-2 text-xs flex-wrap">
+                                    {message.metadata.jurisdictions.map((jurisdiction, i) => (
+                                      <div key={i} className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
+                                          <span className={`badge ${
+                                            jurisdiction.level === "federal" ? "badge-error" :
+                                            jurisdiction.level === "state" ? "badge-warning" :
+                                            "badge-success"
+                                          }`}>
+                                            {jurisdiction.name}
+                                          </span>
+                                          <span className="text-xs text-base-content/70">
+                                            {jurisdiction.role}
+                                          </span>
+                                        </div>
+                                        {i < message.metadata.jurisdictions!.length - 1 && (
+                                          <ChevronRight className="w-3 h-3 text-base-content/50" />
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               )}
 
+                                                        {/* Legacy Visual Navigator - now handled in jurisdictions */}
+                          {businessContext.state && !message.metadata?.jurisdictions && (
+                            <div className="bg-base-200 rounded-lg p-4">
+                              <p className="text-sm font-semibold mb-3">
+                                Regulatory Pathway:
+                              </p>
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="badge badge-error">
+                                  Federal (ATO)
+                                </span>
+                                <ChevronRight className="w-3 h-3" />
+                                <span className="badge badge-warning">
+                                  Queensland
+                                </span>
+                                <ChevronRight className="w-3 h-3" />
+                                <span className="badge badge-success">
+                                  {businessContext.localGov}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
                               {/* Corporate Compliance Analysis */}
-                              {selectedContext === "corporate" &&
-                                corporateContext.complianceGaps && (
+                              {corporateContext.complianceGaps && (
                                   <div className="bg-base-200 rounded-lg p-4">
                                     <p className="text-sm font-semibold mb-3 flex items-center gap-2">
                                       <AlertTriangle className="w-4 h-4 text-warning" />
@@ -1003,43 +1293,38 @@ export default function DashboardPage() {
                         onKeyPress={(e) =>
                           e.key === "Enter" && handleSendMessage()
                         }
-                        placeholder={
-                          selectedContext === "corporate"
-                            ? "Ask about compliance or upload documents..."
-                            : "Ask me anything about compliance..."
-                        }
+                        placeholder="Ask about tax, compliance, government services, data, or upload documents..."
                         className="input input-bordered w-full input-lg rounded-full focus:border-primary shadow-sm pr-12"
                       />
-                      {selectedContext === "corporate" && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <input
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                // Add file upload message to chat
-                                const fileMessage: ChatMessage = {
-                                  id: Date.now().toString(),
-                                  role: "user",
-                                  content: `📄 Uploaded: ${file.name}`,
-                                  timestamp: new Date(),
-                                };
-                                setMessages((prev) => [...prev, fileMessage]);
-                                handleDocumentUpload(file);
-                              }
-                            }}
-                            className="hidden"
-                            id="chat-file-upload"
-                          />
-                          <label
-                            htmlFor="chat-file-upload"
-                            className="btn btn-ghost btn-sm btn-circle"
-                          >
-                            <Upload className="w-4 h-4" />
-                          </label>
-                        </div>
-                      )}
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              // Add file upload message to chat
+                              const fileMessage: ChatMessage = {
+                                id: Date.now().toString(),
+                                role: "user",
+                                content: `📄 Uploaded: ${file.name}`,
+                                timestamp: new Date(),
+                              };
+                              setMessages((prev) => [...prev, fileMessage]);
+                              handleDocumentUpload(file);
+                            }
+                          }}
+                          className="hidden"
+                          id="chat-file-upload"
+                        />
+                        <label
+                          htmlFor="chat-file-upload"
+                          className="btn btn-ghost btn-sm btn-circle"
+                          title="Upload documents for analysis"
+                        >
+                          <Upload className="w-4 h-4" />
+                        </label>
+                      </div>
                     </div>
                     <button
                       onClick={handleSendMessage}
@@ -1065,7 +1350,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Right Context Panel - Business Info */}
-            {businessContext.businessName && selectedContext === "business" && (
+            {businessContext.businessName && (
               <div className="w-80 bg-base-200 border-l border-base-300 p-6 space-y-6 overflow-y-auto">
                 {/* Business Context */}
                 <div>
@@ -1167,8 +1452,7 @@ export default function DashboardPage() {
             )}
 
             {/* Right Context Panel - Corporate Info */}
-            {corporateContext.companyName &&
-              selectedContext === "corporate" && (
+            {corporateContext.companyName && (
                 <div className="w-80 bg-base-200 border-l border-base-300 p-6 space-y-6 overflow-y-auto">
                   {/* Project Context */}
                   <div>
@@ -1311,9 +1595,19 @@ export default function DashboardPage() {
       {/* Memory Toast */}
       {showMemoryToast && (
         <MemoryToast
-          message="Memory updated: Added Painters Club QLD business details to your profile"
+          message={
+            businessContext.businessName
+              ? `Memory updated: Added ${businessContext.businessName} business details to your profile`
+              : corporateContext.companyName
+              ? `Memory updated: Added ${corporateContext.companyName} project details to your profile`
+              : "Memory updated: Added item to your checklist"
+          }
           onUndo={() => {
-            setBusinessContext({});
+            if (businessContext.businessName) {
+              setBusinessContext({});
+            } else if (corporateContext.companyName) {
+              setCorporateContext({});
+            }
             setShowMemoryToast(false);
           }}
           onView={() => setShowMemoryToast(false)}
