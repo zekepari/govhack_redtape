@@ -1,26 +1,104 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* RedTape Theme Configuration */
+[data-theme="redtape"] {
+  --p: 6 90% 54%; /* #D9392D - Primary BOLD RED */
+  --s: 216 19% 16%; /* #1F2937 - Secondary (dark neutral) */
+  --a: 213 80% 43%; /* #0A65CC - Accent (blue) */
+  --n: 216 19% 16%; /* #1F2937 - Neutral */
+  --b1: 0 0% 100%; /* #FFFFFF - Base 100 */
+  --b2: 216 24% 97%; /* #F5F7FA - Base 200 */
+  --b3: 220 13% 91%; /* #E5E7EB - Base 300 */
+  --in: 217 91% 53%; /* #2563EB - Info */
+  --su: 142 71% 40%; /* #16A34A - Success */
+  --wa: 33 91% 50%; /* #F59E0B - Warning */
+  --er: 0 73% 53%; /* #DC2626 - Error */
+
+  --rounded-box: 1rem;
+  --rounded-btn: 0.75rem;
+  --rounded-badge: 1.9rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  line-height: 1.6;
+}
+
+/* Utility classes */
+.gradient-primary {
+  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(6 90% 40%) 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(6 90% 40%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Direct red for logo */
+.text-red {
+  color: #d9392d !important;
+}
+
+/* Force red color for icons */
+.text-primary {
+  color: #d9392d !important;
+}
+
+/* Lucide icon color override */
+svg.lucide {
+  color: currentColor;
+}
+
+/* Button color overrides for red theme */
+.btn-primary {
+  background-color: #d9392d !important;
+  border-color: #d9392d !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background-color: #b82d23 !important;
+  border-color: #b82d23 !important;
+}
+
+.btn-secondary {
+  background-color: #1f2937 !important;
+  border-color: #1f2937 !important;
+  color: white !important;
+}
+
+.btn-secondary:hover {
+  background-color: #111827 !important;
+  border-color: #111827 !important;
+}
+
+.btn-accent {
+  background-color: #0a65cc !important;
+  border-color: #0a65cc !important;
+  color: white !important;
+}
+
+.btn-accent:hover {
+  background-color: #0856ad !important;
+  border-color: #0856ad !important;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(217, 57, 45, 0.1) !important;
+}
+
+.btn-outline {
+  border-color: #d9392d !important;
+  color: #d9392d !important;
+}
+
+.btn-outline:hover {
+  background-color: #d9392d !important;
+  border-color: #d9392d !important;
+  color: white !important;
 }
