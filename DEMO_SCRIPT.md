@@ -1,264 +1,85 @@
-# 🎭 RedTape Demo Script
+RedTape proves that government interaction doesn’t need to be fragmented.
 
-## 🚀 **Demo Flow - Business Context**
+With one portfolio twin, one universal chat, and one actionable checklist, we’ve shown how Australians can navigate tax, services, data, and regulations in a single, trusted experience.
 
-### **Step 1: Landing Page**
+Every answer is personalised, explainable, and backed by official government data — from the ATO to the ABS to the Federal Register of Legislation.
 
-- Navigate to `http://localhost:3000`
-- Show the landing page with mascot and context cards
-- Click **"Go to Dashboard"** button
+And because it’s unified, one question often touches multiple domains at once — tax, services, compliance, and data insights — so nothing slips through the cracks.
 
-### **Step 2: Dashboard Overview**
+This is more than a prototype: it’s a model for how government could deliver seamless, citizen-first services in the future.
 
-- Point out the clean sidebar with context switching
-- Show the Business context is active (red highlight)
-- Explain the chat-first design
+One assistant. Four challenges. One solution.
 
-### **Step 3: Business Context Detection**
+That’s RedTape.
 
-**Type in chat:**
 
-```
-I'm a painting business in QLD
-```
+Welcome to RedTape — the AI assistant that helps Australians navigate compliance with confidence.
+This isn’t just another chatbot. It’s one assistant that covers everything government.
 
-**Expected Response:**
+EXPLAIN CHALLENGE AREA
 
-- Assistant asks for ABN
-- ABN form appears inline in chat
-- Explains why ABN helps with compliance
+RedTape answers with clarity and trust. Every response is backed by official datasets, registers, and legislation, explained in plain English, and turned into an actionable checklist.
 
-### **Step 4: ABN Lookup**
+And the key is the unified experience
 
-**Enter ABN in form:**
+	1.	You set up your portfolio twin once — enter your ABN, study status, visa, or dependants.
+	2.	You ask anything. One question like ‘What do I need as a new business?’ will automatically cover tax, compliance, available services, and industry data together.
+	3.	All obligations go into one checklist: tax deadlines, service eligibility, licences, permits — everything in one place.”
 
-```
-12 345 678 901
-```
+Red Tape addresses....
 
-**Click "Look up"**
 
-**Expected Response:**
-
-- Shows "Painters Club QLD" found
-- Shows location: postcode 4507, Queensland (City of Moreton Bay)
-- Memory toast appears: "Memory updated: Added Painters Club QLD business details"
-- Business details form appears asking for more info
-
-### **Step 5: Business Details**
-
-**Fill out the form:**
-
-- **Employees:** `3`
-- **Contractors:** `2`
-- **Interstate:** ✅ Check the box
-- **Additional info:** `We specialize in residential house painting and use eco-friendly paints`
-
-**Click "Continue"**
-
-**Expected Response:**
-
-- Assistant confirms all details
-- Right sidebar appears with Business Context
-- Shows jurisdiction: Federal → Queensland → City of Moreton Bay
-- Quick suggestion bubbles appear
-
-### **Step 6: Follow-up Questions**
-
-**Click on any suggestion bubble, for example:**
+### 1. Job Loss
 
 ```
-Workers compensation for 3 employees
+I just lost my job, what government help can I get?
 ```
 
-**Expected Response:**
+Fill form: MyGov ✅, Income "30k-60k", Dependents "1", Housing "rent" → Click **"Get my eligibility"**
 
-- Detailed answer about workers comp
-- "What applies to you" chips show: Painters Club QLD, 3 Employees, etc.
-- Action steps with "Add to checklist" buttons
-- Citations to relevant laws
-- New suggestion bubbles appear
-
-### **Step 7: Demonstrate Features**
-
-**Show the right sidebar:**
-
-- Business Context with all details
-- Jurisdiction breakdown (Federal/State/Local)
-- Compliance status indicators
-
-**Show the memory system:**
-
-- Point out how profile was built through conversation
-- Show consent-driven updates
-
-**Show the checklist:**
-
-- Click "Add to checklist" on any action item
-- Show how obligations become trackable tasks
-
-### **Step 8: Context Switching**
-
-**Click "Student" in the sidebar**
-
-**Expected Response:**
-
-- Chat resets (ephemeral)
-- New welcome message for student context
-- Right sidebar disappears (no business context)
-- Different suggestions appear
-
----
-
-## 🎯 **Key Demo Points to Highlight**
-
-### **1. Chat-First Experience**
-
-- "Unlike traditional government portals, RedTape is conversation-first"
-- "Just tell us about your situation in plain English"
-
-### **2. Portfolio-Driven Personalization**
-
-- "Notice how the assistant remembers your business details"
-- "Every answer is filtered to your specific situation"
-- "Chips show exactly why you're seeing this advice"
-
-### **3. Consent-Driven Memory**
-
-- "See the memory toast? You control what information is saved"
-- "Undo, view, or edit your profile anytime"
-
-### **4. Actionable Guidance**
-
-- "Not just information - actionable next steps"
-- "Add obligations directly to your checklist"
-- "Track your compliance progress"
-
-### **5. Trust & Transparency**
-
-- "Every answer includes citations to official sources"
-- "Federal → State → Local jurisdiction mapping"
-- "Government-verified data only"
-
-### **6. Ephemeral Chats**
-
-- "Chats don't persist - only the useful facts do"
-- "Switch contexts anytime for different guidance"
-- "Clean slate for each conversation"
-
----
-
-## 🔄 **Alternative Demo Paths**
-
-### **Housing Context:**
+### 2. Carer
 
 ```
-I'm looking to buy my first home in Melbourne
+I've just become a carer for my mum, what do I need to do?
 ```
 
-### **Student Context:**
+Fill form: Care type "elderly", Hours "constant", Relationship "parent", Other income ❌ → Click **"Check my eligibility"**
+
+### 3. Student Tax
 
 ```
-I'm an international student on a 485 visa
+What can I claim on my tax return as a student working part-time?
 ```
 
-### **Travel Context:**
+Fill form: Study "university", Work "retail", Income "10k-18k", HECS ✅ → Click **"Get my tax guidance"**
+
+### 4. Business Tax
 
 ```
-I need to visit family in India for 3 months
+I want to start a painting business, what rules do I follow?
 ```
 
-### **Corporate Context:**
+Enter ABN: `13581744503` → Fill business form: Employees "3", Contractors "2", Interstate ✅ → Click **"Continue"** → Select bank "CommBank" → Click **"Connect & Analyze"**
+
+### 5. Corporate Upload
+
+Click upload button (📄) → Upload any PDF → Wait for analysis
+
+### 6. Data Query
 
 ```
-We're planning a new development project in Brisbane
+How many small businesses in Queensland hire apprentices?
+```
+
+### 7. Employment Data
+
+```
+Where can I see employment rates for young people?
 ```
 
 ---
 
-## ⚡ **Quick Recovery Commands**
+## Recovery
 
-If something breaks during demo:
-
-**Reset Chat:**
-
-- Click "New Chat" button
-
-**Switch Context:**
-
-- Click any context in sidebar to reset
-
-**Clear Business Data:**
-
-- Memory toast "Undo" button
-- Or refresh page
-
----
-
-## 🎪 **Demo Tips**
-
-1. **Start with the problem:** "Navigating Australian compliance is confusing"
-2. **Show the solution:** "RedTape makes it conversational and personal"
-3. **Highlight the magic:** "It learns about you and adapts guidance"
-4. **Emphasize trust:** "All backed by official government sources"
-5. **Show the future:** "Imagine this for every government interaction"
-
-**Total Demo Time:** 3-5 minutes
-
----
-
-## 🏢 **Corporate Context Demo Flow**
-
-### **Step 1: Switch to Corporate Mode**
-
-- Click **"Corporate"** in the left sidebar
-- Chat resets to corporate context
-- Notice the orange corporate branding
-
-### **Step 2: Upload Development Document**
-
-- Notice the upload button (📄) in the chat input bar (only visible in corporate mode)
-- Click the upload button in the chat input
-- Upload **any PDF file** (content doesn't matter - we'll pretend it's development docs)
-- File appears as user message: "📄 Uploaded: [filename]"
-- Processing begins automatically (3 seconds)
-
-**Expected Response (after 3 seconds):**
-
-- "I've analyzed your document [filename] for the Brisbane development project"
-- Shows compliance gap analysis
-- Right sidebar appears with project context
-
-### **Step 4: Review Compliance Analysis**
-
-**Right sidebar shows:**
-
-- **Project Context**: Brisbane Development Corp, Mixed-Use Development, Brisbane CBD
-- **Compliance Overview**: Environmental (covered), Planning (partial), Safety (missing)
-- **Brisbane Jurisdiction**: Federal → State → Local breakdown
-- **Gap Summary**: 2 covered, 1 partial, 3 missing
-
-**Chat shows detailed breakdown:**
-
-- Environmental: ✅ Covered (EIA, Water Management)
-- Planning & Zoning: ⚠️ Partial (Missing Heritage Assessment)
-- Safety & Construction: ❌ Missing (Safety Plan, Fire Design, Accessibility)
-
-### **Step 5: Follow-up Questions**
-
-**Click suggestion bubbles:**
-
-- "How do I get a Heritage Assessment?"
-- "What's required for fire safety design?"
-- "Brisbane City Council development fees"
-- "Timeline for development approval"
-
-### **Key Corporate Demo Points:**
-
-- **Document Analysis**: Upload → Instant compliance review
-- **Gap Analysis**: Green/Amber/Red coverage mapping
-- **Jurisdiction Mapping**: Federal/State/Local requirements
-- **Actionable Steps**: Specific next actions with "Add to checklist"
-- **Citations**: Direct links to relevant regulations
-
-**Corporate Demo Time:** 2-3 minutes
+- **Reset:** Click "New Chat"
+- **Clear:** Memory toast "Undo"

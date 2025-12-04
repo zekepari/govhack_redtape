@@ -98,8 +98,9 @@ export default function Home() {
               <span className="gradient-text">confidence</span>
             </h1>
             <p className="text-xl md:text-2xl text-base-content/70 mb-8">
-              One AI assistant for tax compliance, government services, data insights, and regulatory navigation.
-              Get personalised answers across all levels of Australian government.
+              One AI assistant for tax compliance, government services, data
+              insights, and regulatory navigation. Get personalised answers
+              across all levels of Australian government.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
               <Link href="/dashboard" className="btn btn-primary btn-lg">
@@ -129,14 +130,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Universal Challenge Areas */}
+      {/* Unified Government Services */}
       <section className="container mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-black mb-4">
-            One assistant, four challenge areas
+            All your government needs in one place
           </h2>
           <p className="text-xl text-base-content/70 max-w-3xl mx-auto">
-            Ask any question and get answers that span tax, services, data, and compliance simultaneously
+            Ask any question and get comprehensive answers covering tax,
+            services, data, and compliance
           </p>
         </div>
 
@@ -185,10 +187,7 @@ export default function Home() {
         </div>
 
         <div className="text-center mt-8">
-          <Link
-            href="/dashboard"
-            className="btn btn-primary btn-lg"
-          >
+          <Link href="/dashboard" className="btn btn-primary btn-lg">
             Try the Universal Assistant
             <ArrowRight className="w-5 h-5 ml-2" />
           </Link>
@@ -237,12 +236,12 @@ export default function Home() {
       {/* How It Works Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-                      <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              How the unified experience works
-            </h2>
-            <p className="text-xl text-base-content/70 max-w-2xl mx-auto">
-              One chat, one portfolio, all four challenge areas covered
-            </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            How the unified experience works
+          </h2>
+          <p className="text-xl text-base-content/70 max-w-2xl mx-auto">
+            One chat, one portfolio, all government services covered
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -256,8 +255,8 @@ export default function Home() {
                 Set up your portfolio
               </h3>
               <p className="text-base-content/70">
-                Enter your business details, visa status, or personal situation once.
-                This powers personalized answers across all areas.
+                Enter your business details, visa status, or personal situation
+                once. This powers personalized answers across all areas.
               </p>
             </div>
             {/* Connector line for desktop */}
@@ -272,8 +271,9 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Ask anything</h3>
               <p className="text-base-content/70">
-                One question can hit multiple areas: "What do I need as a new business?"
-                covers tax, compliance, support programs, and industry data.
+                One question can hit multiple areas: "What do I need as a new
+                business?" covers tax, compliance, support programs, and
+                industry data.
               </p>
             </div>
             {/* Connector line for desktop */}
@@ -285,11 +285,12 @@ export default function Home() {
             <div className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xl mb-4">
               3
             </div>
-                          <h3 className="text-xl font-semibold mb-2">Universal checklist</h3>
-              <p className="text-base-content/70">
-                All obligations go into one checklist: tax deadlines, permit applications,
-                support program eligibility, and compliance requirements.
-              </p>
+            <h3 className="text-xl font-semibold mb-2">Universal checklist</h3>
+            <p className="text-base-content/70">
+              All obligations go into one checklist: tax deadlines, permit
+              applications, support program eligibility, and compliance
+              requirements.
+            </p>
           </div>
         </div>
       </section>
@@ -299,11 +300,12 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Four GovHack challenges, one unified solution
+              Complete government guidance, unified experience
             </h2>
             <p className="text-xl text-base-content/70 max-w-3xl mx-auto">
-              RedTape addresses Proactive Tax Experience, Smarter Services, Data Landscape Navigation,
-              and Red Tape Navigator in a single, seamless interface
+              RedTape combines AI-powered guidance with official government data
+              to give you accurate, personalized compliance advice across all
+              areas of government interaction
             </p>
           </div>
 
@@ -319,8 +321,9 @@ export default function Home() {
                     Universal AI Assistant
                   </h3>
                   <p className="text-base-content/70">
-                    One chat interface that routes questions to the right challenge areas
-                    and provides comprehensive, cross-domain answers
+                    One chat interface that routes questions to the right
+                    government departments and provides comprehensive,
+                    cross-domain answers
                   </p>
                 </div>
               </div>
@@ -328,19 +331,21 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Multi-challenge responses: tax + compliance + services + data
+                    Comprehensive responses: tax + compliance + services + data
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Portfolio-driven personalization across all government levels
+                    Portfolio-driven personalization across all government
+                    levels
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Federal Register, ATO datasets, ABS API, and state legislation
+                    Federal Register, ATO datasets, ABS API, and state
+                    legislation
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -359,12 +364,10 @@ export default function Home() {
                   <User className="w-7 h-7 text-red-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">
-                    Portfolio Twin
-                  </h3>
+                  <h3 className="text-2xl font-bold mb-2">Portfolio Twin</h3>
                   <p className="text-base-content/70">
-                    Your digital twin that powers all four challenge areas with
-                    consent-driven memory updates
+                    Your digital twin that powers all government interactions
+                    with consent-driven memory updates
                   </p>
                 </div>
               </div>
@@ -372,19 +375,22 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Business context: ABN, industry, employees, interstate operations
+                    Business context: ABN, industry, employees, interstate
+                    operations
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Individual context: visa, study status, work rights, dependants
+                    Individual context: visa, study status, work rights,
+                    dependants
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Cross-challenge filtering: tax thresholds, service eligibility, data relevance
+                    Smart filtering: tax thresholds, service eligibility, data
+                    relevance
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -407,8 +413,9 @@ export default function Home() {
                     Universal Checklist
                   </h3>
                   <p className="text-base-content/70">
-                    One checklist for all areas: tax deadlines, permit applications,
-                    service eligibility, and compliance requirements
+                    One checklist for all areas: tax deadlines, permit
+                    applications, service eligibility, and compliance
+                    requirements
                   </p>
                 </div>
               </div>
@@ -416,19 +423,22 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Multi-challenge items: BAS lodgment, permit renewal, benefit applications
+                    Unified tracking: BAS lodgment, permit renewal, benefit
+                    applications
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Priority-based organization: high (tax), medium (permits), low (data)
+                    Priority-based organization: high (tax), medium (permits),
+                    low (data)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Comprehensive compliance roadmap export across all challenge areas
+                    Comprehensive compliance roadmap export across all
+                    government areas
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -449,7 +459,8 @@ export default function Home() {
                 <div>
                   <h3 className="text-2xl font-bold mb-2">Document Analysis</h3>
                   <p className="text-base-content/70">
-                    Upload any document and get multi-challenge compliance analysis
+                    Upload any document and get comprehensive compliance
+                    analysis
                   </p>
                 </div>
               </div>
@@ -457,25 +468,29 @@ export default function Home() {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Document upload works in any context: business, individual, corporate
+                    Document upload works in any context: business, individual,
+                    corporate
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Cross-domain gap analysis: tax, compliance, services, data coverage
+                    Cross-domain gap analysis: tax, compliance, services, data
+                    coverage
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Visual navigator: Federal → State → Local jurisdiction mapping
+                    Visual navigator: Federal → State → Local jurisdiction
+                    mapping
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <span className="text-base-content/80">
-                    Unified compliance documentation across all four challenge areas
+                    Unified compliance documentation across all government
+                    departments
                   </span>
                 </li>
               </ul>
@@ -516,7 +531,7 @@ export default function Home() {
       <section className="container mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            One solution, four challenges solved
+            Complete government guidance solution
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
@@ -549,9 +564,7 @@ export default function Home() {
             <p className="text-sm font-semibold text-green-500 mb-1">
               Data & Insights
             </p>
-            <p className="text-xs text-base-content/70">
-              ABS API connected
-            </p>
+            <p className="text-xs text-base-content/70">ABS API connected</p>
           </div>
           <div className="bg-purple-500/10 rounded-2xl p-6">
             <div className="text-3xl md:text-4xl font-bold text-purple-500 mb-2">
@@ -560,9 +573,7 @@ export default function Home() {
             <p className="text-sm font-semibold text-purple-500 mb-1">
               Regulatory Navigation
             </p>
-            <p className="text-xs text-base-content/70">
-              Multi-level mapping
-            </p>
+            <p className="text-xs text-base-content/70">Multi-level mapping</p>
           </div>
         </div>
 
@@ -572,11 +583,11 @@ export default function Home() {
         {/* Final Message */}
         <div className="text-center max-w-3xl mx-auto">
           <h3 className="text-2xl md:text-3xl font-bold mb-4">
-            Four GovHack challenges, one unified experience
+            Complete government services, one unified experience
           </h3>
           <p className="text-lg text-base-content/70 mb-8">
-            RedTape proves that government interaction doesn't need silos.
-            One portfolio twin, one universal chat, one comprehensive checklist
+            RedTape proves that government interaction doesn't need silos. One
+            portfolio twin, one universal chat, one comprehensive checklist
             covering tax, services, data, and compliance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

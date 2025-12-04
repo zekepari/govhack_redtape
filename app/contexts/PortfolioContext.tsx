@@ -46,15 +46,49 @@ export interface LocationContext {
 export interface Portfolio {
   // Core Identity
   userType?: "individual" | "business" | "both";
-  
+
   // Business Details
   business?: BusinessInfo;
-  
+
   // Individual Details
   individual?: IndividualInfo;
-  
+
   // Location Context
   location?: LocationContext;
+
+  // Contextual role modules
+  roles?: {
+    jobseeker?: {
+      hasMyGov: boolean;
+      previousIncome: string;
+      dependents: string;
+      housingStatus: string;
+      dateAdded: Date;
+    };
+    carer?: {
+      careType: string;
+      hoursPerWeek: string;
+      relationshipToCared: string;
+      hasOtherIncome: boolean;
+      dateAdded: Date;
+    };
+    student?: {
+      studyType: string;
+      workType: string;
+      annualIncome: string;
+      hasHECSDebt: boolean;
+      dateAdded: Date;
+    };
+    businessOwner?: {
+      businessName: string;
+      abn: string;
+      industry: string;
+      employees: number;
+      contractors: number;
+      location: string;
+      dateAdded: Date;
+    };
+  };
 }
 
 export interface MemoryUpdate {
@@ -94,9 +128,20 @@ type PortfolioAction =
   | { type: "UPDATE_INDIVIDUAL_INFO"; payload: Partial<IndividualInfo> }
   | { type: "UPDATE_LOCATION_INFO"; payload: Partial<LocationContext> }
   | { type: "SET_USER_TYPE"; payload: "individual" | "business" | "both" }
+  | {
+      type: "ADD_ROLE_MODULE";
+      payload: { role: keyof NonNullable<Portfolio["roles"]>; data: any };
+    }
+  | {
+      type: "REMOVE_ROLE_MODULE";
+      payload: { role: keyof NonNullable<Portfolio["roles"]> };
+    }
   | { type: "SWITCH_CONTEXT"; payload: ContextMode }
   | { type: "CLEAR_PORTFOLIO" }
-  | { type: "ADD_CHECKLIST_ITEM"; payload: Omit<ChecklistItem, "id" | "addedAt" | "completed"> }
+  | {
+      type: "ADD_CHECKLIST_ITEM";
+      payload: Omit<ChecklistItem, "id" | "addedAt" | "completed">;
+    }
   | { type: "TOGGLE_CHECKLIST_ITEM"; payload: { id: string } }
   | { type: "REMOVE_CHECKLIST_ITEM"; payload: { id: string } }
   | { type: "CONFIRM_UPDATE"; payload: { field: string } }
@@ -161,6 +206,32 @@ function portfolioReducer(
         },
       };
 
+    case "ADD_ROLE_MODULE":
+      return {
+        ...state,
+        portfolio: {
+          ...state.portfolio,
+          roles: {
+            ...state.portfolio.roles,
+            [action.payload.role]: {
+              ...action.payload.data,
+              dateAdded: new Date(),
+            },
+          },
+        },
+      };
+
+    case "REMOVE_ROLE_MODULE":
+      const newRoles = { ...state.portfolio.roles };
+      delete newRoles[action.payload.role];
+      return {
+        ...state,
+        portfolio: {
+          ...state.portfolio,
+          roles: newRoles,
+        },
+      };
+
     case "ADD_CHECKLIST_ITEM":
       return {
         ...state,
@@ -220,9 +291,16 @@ const PortfolioContext = createContext<{
   updateIndividualInfo: (info: Partial<IndividualInfo>) => void;
   updateLocationInfo: (info: Partial<LocationContext>) => void;
   setUserType: (type: "individual" | "business" | "both") => void;
+  addRoleModule: (
+    role: keyof NonNullable<Portfolio["roles"]>,
+    data: any
+  ) => void;
+  removeRoleModule: (role: keyof NonNullable<Portfolio["roles"]>) => void;
   switchContext: (mode: ContextMode) => void;
   clearPortfolio: () => void;
-  addChecklistItem: (item: Omit<ChecklistItem, "id" | "addedAt" | "completed">) => void;
+  addChecklistItem: (
+    item: Omit<ChecklistItem, "id" | "addedAt" | "completed">
+  ) => void;
   toggleChecklistItem: (id: string) => void;
   removeChecklistItem: (id: string) => void;
 } | null>(null);
@@ -248,11 +326,24 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_USER_TYPE", payload: type });
   };
 
+  const addRoleModule = (
+    role: keyof NonNullable<Portfolio["roles"]>,
+    data: any
+  ) => {
+    dispatch({ type: "ADD_ROLE_MODULE", payload: { role, data } });
+  };
+
+  const removeRoleModule = (role: keyof NonNullable<Portfolio["roles"]>) => {
+    dispatch({ type: "REMOVE_ROLE_MODULE", payload: { role } });
+  };
+
   const switchContext = (mode: ContextMode) => {
     dispatch({ type: "SWITCH_CONTEXT", payload: mode });
   };
 
-  const addChecklistItem = (item: Omit<ChecklistItem, "id" | "addedAt" | "completed">) => {
+  const addChecklistItem = (
+    item: Omit<ChecklistItem, "id" | "addedAt" | "completed">
+  ) => {
     dispatch({ type: "ADD_CHECKLIST_ITEM", payload: item });
   };
 
@@ -281,6 +372,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         updateIndividualInfo,
         updateLocationInfo,
         setUserType,
+        addRoleModule,
+        removeRoleModule,
         switchContext,
         clearPortfolio,
         addChecklistItem,
