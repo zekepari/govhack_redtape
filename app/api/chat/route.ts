@@ -117,15 +117,23 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
 
-  const userMessages =
+  type IncomingMessage = { role: "user" | "assistant"; content: string };
+
+  const userMessages: IncomingMessage[] =
     Array.isArray(body?.messages) && body.messages.length > 0
       ? body.messages
-          .filter(
-            (msg: any) =>
-              typeof msg?.content === "string" &&
-              (msg.role === "user" || msg.role === "assistant")
-          )
-          .map((msg: any) => ({
+          .filter((msg: unknown): msg is IncomingMessage => {
+            return (
+              typeof msg === "object" &&
+              msg !== null &&
+              (msg as { role?: unknown }).role !== undefined &&
+              (msg as { content?: unknown }).content !== undefined &&
+              typeof (msg as IncomingMessage).content === "string" &&
+              ((msg as IncomingMessage).role === "user" ||
+                (msg as IncomingMessage).role === "assistant")
+            );
+          })
+          .map((msg) => ({
             role: msg.role,
             content: msg.content,
             type: "message" as const,
@@ -172,11 +180,21 @@ export async function POST(request: Request) {
 
     if (!content && Array.isArray(response.output)) {
       const textParts: string[] = [];
-      response.output.forEach((item: any) => {
-        if (item.type === "message" && Array.isArray(item.content)) {
-          item.content.forEach((part: any) => {
-            if (part.type === "output_text" && typeof part.text === "string") {
-              textParts.push(part.text);
+      response.output.forEach((item: unknown) => {
+        if (
+          typeof item === "object" &&
+          item !== null &&
+          (item as { type?: string }).type === "message" &&
+          Array.isArray((item as { content?: unknown[] }).content)
+        ) {
+          (item as { content: unknown[] }).content.forEach((part: unknown) => {
+            if (
+              typeof part === "object" &&
+              part !== null &&
+              (part as { type?: string }).type === "output_text" &&
+              typeof (part as { text?: unknown }).text === "string"
+            ) {
+              textParts.push((part as { text: string }).text);
             }
           });
         }

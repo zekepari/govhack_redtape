@@ -11,13 +11,11 @@ import {
   Building2,
   GraduationCap,
   Send,
-  MessageSquare,
   CheckCircle,
   Sparkles,
   Shield,
   Bot,
   Plus,
-  ArrowRight,
   X,
   Menu,
   ExternalLink,
@@ -29,11 +27,7 @@ import {
   AlertTriangle,
   AlertCircle,
 } from "lucide-react";
-import {
-  usePortfolio,
-  type ContextMode,
-  type ChecklistItem,
-} from "../contexts/PortfolioContext";
+import { usePortfolio } from "../contexts/PortfolioContext";
 import { MemoryToast } from "../components/MemoryToast";
 
 type ChallengeArea = "tax" | "services" | "data" | "compliance";
@@ -162,33 +156,12 @@ const challengeConfig = {
   },
 };
 
-const contextOptions = [
-  { id: "business", icon: Briefcase, label: "Business", color: "bg-red-500" },
-  {
-    id: "student",
-    icon: GraduationCap,
-    label: "Student",
-    color: "bg-blue-500",
-  },
-  { id: "housing", icon: Home, label: "Housing", color: "bg-green-500" },
-  { id: "travel", icon: Plane, label: "Travel", color: "bg-purple-500" },
-  {
-    id: "corporate",
-    icon: Building2,
-    label: "Corporate",
-    color: "bg-orange-500",
-  },
-];
-
 export default function DashboardPage() {
   const {
     state,
-    switchContext,
     addChecklistItem,
     toggleChecklistItem,
-    removeChecklistItem,
     addRoleModule,
-    removeRoleModule,
   } = usePortfolio();
   const [isClient, setIsClient] = useState(false);
 
@@ -330,7 +303,14 @@ export default function DashboardPage() {
     await sendChatMessage(messageToSend);
   };
 
-const handleAddToChecklist = (item: any) => {
+  const handleAddToChecklist = (item: {
+    title: string;
+    agency: string;
+    priority: "high" | "medium" | "low";
+    category: ChallengeArea;
+    description?: string;
+    dueDate?: string;
+  }) => {
     addChecklistItem(item);
     // Show confirmation toast
     setShowMemoryToast(true);
@@ -985,9 +965,9 @@ const handleAddToChecklist = (item: any) => {
                                 )}
 
                                 <p className="text-xs text-base-content/70">
-                                  I'll analyze your documents against Australian
-                                  development regulations and identify any
-                                  compliance gaps.
+                                  I&apos;ll analyze your documents against
+                                  Australian development regulations and
+                                  identify any compliance gaps.
                                 </p>
                               </div>
                             </div>

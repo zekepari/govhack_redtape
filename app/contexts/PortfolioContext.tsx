@@ -135,10 +135,7 @@ type PortfolioAction =
   | { type: "UPDATE_INDIVIDUAL_INFO"; payload: Partial<IndividualInfo> }
   | { type: "UPDATE_LOCATION_INFO"; payload: Partial<LocationContext> }
   | { type: "SET_USER_TYPE"; payload: "individual" | "business" | "both" }
-  | {
-      type: "ADD_ROLE_MODULE";
-      payload: { role: keyof NonNullable<Portfolio["roles"]>; data: any };
-    }
+  | RoleModuleAction
   | {
       type: "REMOVE_ROLE_MODULE";
       payload: { role: keyof NonNullable<Portfolio["roles"]> };
@@ -154,6 +151,12 @@ type PortfolioAction =
   | { type: "CONFIRM_UPDATE"; payload: { field: string } }
   | { type: "UNDO_UPDATE"; payload: { field: string } }
   | { type: "HYDRATE_STATE"; payload: PortfolioState };
+
+type RoleKey = keyof NonNullable<Portfolio["roles"]>;
+type RoleModulePayload = {
+  [K in RoleKey]: { role: K; data: NonNullable<Portfolio["roles"]>[K] };
+}[RoleKey];
+type RoleModuleAction = { type: "ADD_ROLE_MODULE"; payload: RoleModulePayload };
 
 // Initial state
 const initialState: PortfolioState = {
@@ -307,9 +310,9 @@ const PortfolioContext = createContext<{
   updateIndividualInfo: (info: Partial<IndividualInfo>) => void;
   updateLocationInfo: (info: Partial<LocationContext>) => void;
   setUserType: (type: "individual" | "business" | "both") => void;
-  addRoleModule: (
-    role: keyof NonNullable<Portfolio["roles"]>,
-    data: any
+  addRoleModule: <K extends RoleKey>(
+    role: K,
+    data: NonNullable<Portfolio["roles"]>[K]
   ) => void;
   removeRoleModule: (role: keyof NonNullable<Portfolio["roles"]>) => void;
   switchContext: (mode: ContextMode) => void;
@@ -369,9 +372,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_USER_TYPE", payload: type });
   };
 
-  const addRoleModule = (
-    role: keyof NonNullable<Portfolio["roles"]>,
-    data: any
+  const addRoleModule = <K extends RoleKey>(
+    role: K,
+    data: NonNullable<Portfolio["roles"]>[K]
   ) => {
     dispatch({ type: "ADD_ROLE_MODULE", payload: { role, data } });
   };

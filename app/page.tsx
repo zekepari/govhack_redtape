@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { ContextSelection } from "./components/ContextSelection";
 
 const features = [
   {
@@ -271,8 +270,9 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Ask anything</h3>
               <p className="text-base-content/70">
-                One question can hit multiple areas: "What do I need as a new
-                business?" covers tax, compliance, support programs, and
+                One question can hit multiple areas: &quot;What do I need as a
+                new business?&quot; covers tax, compliance, support programs,
+                and
                 industry data.
               </p>
             </div>
@@ -586,7 +586,8 @@ export default function Home() {
             Complete government services, one unified experience
           </h3>
           <p className="text-lg text-base-content/70 mb-8">
-            RedTape proves that government interaction doesn't need silos. One
+            RedTape proves that government interaction doesn&apos;t need silos.
+            One
             portfolio twin, one universal chat, one comprehensive checklist
             covering tax, services, data, and compliance.
           </p>
