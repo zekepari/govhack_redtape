@@ -133,7 +133,7 @@ export async function POST(request: Request) {
                 (msg as IncomingMessage).role === "assistant")
             );
           })
-          .map((msg) => ({
+          .map((msg: IncomingMessage) => ({
             role: msg.role,
             content: msg.content,
             type: "message" as const,

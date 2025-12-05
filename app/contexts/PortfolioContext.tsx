@@ -154,8 +154,9 @@ type PortfolioAction =
 
 type RoleKey = keyof NonNullable<Portfolio["roles"]>;
 type RoleModulePayload = {
-  [K in RoleKey]: { role: K; data: NonNullable<Portfolio["roles"]>[K] };
-}[RoleKey];
+  role: RoleKey;
+  data: Partial<NonNullable<Portfolio["roles"]>[RoleKey]>;
+};
 type RoleModuleAction = { type: "ADD_ROLE_MODULE"; payload: RoleModulePayload };
 
 // Initial state
@@ -312,7 +313,7 @@ const PortfolioContext = createContext<{
   setUserType: (type: "individual" | "business" | "both") => void;
   addRoleModule: <K extends RoleKey>(
     role: K,
-    data: NonNullable<Portfolio["roles"]>[K]
+    data: Partial<NonNullable<Portfolio["roles"]>[K]>
   ) => void;
   removeRoleModule: (role: keyof NonNullable<Portfolio["roles"]>) => void;
   switchContext: (mode: ContextMode) => void;
@@ -374,7 +375,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   const addRoleModule = <K extends RoleKey>(
     role: K,
-    data: NonNullable<Portfolio["roles"]>[K]
+    data: Partial<NonNullable<Portfolio["roles"]>[K]>
   ) => {
     dispatch({ type: "ADD_ROLE_MODULE", payload: { role, data } });
   };

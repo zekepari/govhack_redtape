@@ -6,8 +6,6 @@ import { SignOutButton } from "@clerk/nextjs";
 import {
   User,
   Briefcase,
-  Home,
-  Plane,
   Building2,
   GraduationCap,
   Send,
@@ -1712,8 +1710,7 @@ export default function DashboardPage() {
                                             </span>
                                           </div>
                                           {i <
-                                            message.metadata.jurisdictions!
-                                              .length -
+                                            (message.metadata?.jurisdictions?.length ?? 0) -
                                               1 && (
                                             <ChevronRight className="w-3 h-3 text-base-content/50" />
                                           )}
