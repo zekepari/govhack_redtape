@@ -3,6 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
+import {
   User,
   Briefcase,
   Home,
@@ -34,7 +41,6 @@ import {
   type ChecklistItem,
 } from "../contexts/PortfolioContext";
 import { MemoryToast } from "../components/MemoryToast";
-import { findMatchingFlow } from "../lib/demoFlows";
 
 type ChallengeArea = "tax" | "services" | "data" | "compliance";
 
@@ -139,55 +145,6 @@ const challengeConfig = {
     color: "bg-purple-500",
     textColor: "text-purple-500",
   },
-};
-
-// AI routing logic
-const analyzeQuestion = (question: string, portfolio: any): ChallengeArea[] => {
-  const challengeAreas: ChallengeArea[] = [];
-  const lowerQuestion = question.toLowerCase();
-
-  // Tax keywords
-  if (
-    /\b(tax|gst|bas|abn|payg|super|deduction|ato|quarterly|annual|return)\b/i.test(
-      lowerQuestion
-    )
-  ) {
-    challengeAreas.push("tax");
-  }
-
-  // Services keywords
-  if (
-    /\b(support|benefit|payment|job|unemployed|study|visa|centrelink|medicare|services|apply)\b/i.test(
-      lowerQuestion
-    )
-  ) {
-    challengeAreas.push("services");
-  }
-
-  // Data keywords
-  if (
-    /\b(data|dataset|stats|statistics|api|abs|research|insights|trends|numbers)\b/i.test(
-      lowerQuestion
-    )
-  ) {
-    challengeAreas.push("data");
-  }
-
-  // Compliance keywords
-  if (
-    /\b(permit|license|regulation|compliance|agency|law|legal|requirement|obligation|council)\b/i.test(
-      lowerQuestion
-    )
-  ) {
-    challengeAreas.push("compliance");
-  }
-
-  // If no specific area detected, default to compliance
-  if (challengeAreas.length === 0) {
-    challengeAreas.push("compliance");
-  }
-
-  return challengeAreas;
 };
 
 const contextOptions = [
@@ -299,198 +256,59 @@ export default function DashboardPage() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
-    const currentInput = inputMessage;
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputMessage("");
     setIsTyping(true);
 
-    // Universal AI routing and response generation
-    setTimeout(() => {
-      const challengeAreas = analyzeQuestion(currentInput, state.portfolio);
-      let aiResponse: ChatMessage;
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages.map(({ role, content }) => ({
+            role,
+            content,
+          })),
+          portfolio: state.portfolio,
+        }),
+      });
 
-      // Check for demo flow matches and set context
-      const matchedFlow = findMatchingFlow(currentInput);
-
-      if (matchedFlow) {
-        // Set detected context
-        if (
-          matchedFlow.challenge === "Red Tape Navigator" ||
-          matchedFlow.challenge === "Your Tax Just Happens"
-        ) {
-          setDetectedContext("Business");
-        } else if (matchedFlow.challenge === "Smarter Services") {
-          setDetectedContext("Services");
-        } else if (matchedFlow.challenge === "Navigating Data Landscape") {
-          setDetectedContext("Data");
-        }
-        aiResponse = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: matchedFlow.response.content,
-          timestamp: new Date(),
-          showForm: matchedFlow.response.showForm as any,
-          metadata: {
-            challengeAreas: matchedFlow.response.challengeAreas as any[],
-            appliesTo: matchedFlow.response.appliesTo,
-            actions: matchedFlow.response.actions,
-            citations: matchedFlow.response.citations as any[],
-            jurisdictions: matchedFlow.response.jurisdictions as any[],
-            quickSuggestions: matchedFlow.response.quickSuggestions,
-          },
-        };
-      } else {
-        // Generate multi-challenge response
-        const responseContent = generateUniversalResponse(
-          currentInput,
-          challengeAreas,
-          state.portfolio
-        );
-
-        aiResponse = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: responseContent.content,
-          timestamp: new Date(),
-          metadata: {
-            challengeAreas,
-            appliesTo: responseContent.appliesTo,
-            actions: responseContent.actions,
-            citations: responseContent.citations,
-            jurisdictions: responseContent.jurisdictions,
-            quickSuggestions: responseContent.quickSuggestions,
-            checklistItems: responseContent.checklistItems,
-          },
-        };
+      if (!response.ok) {
+        throw new Error("Failed to reach RedTape model");
       }
 
-      setMessages((prev) => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 1500);
-  };
+      const data = await response.json();
 
-  // Universal response generator
-  const generateUniversalResponse = (
-    question: string,
-    challengeAreas: ChallengeArea[],
-    portfolio: any
-  ) => {
-    const lowerQuestion = question.toLowerCase();
-
-    // Sample responses that cover multiple challenge areas
-    if (lowerQuestion.includes("gst") || lowerQuestion.includes("register")) {
-      return {
-        content: `GST registration affects multiple aspects of your business:\n\n**Tax Compliance:** You need to register if your turnover exceeds $75,000\n**Government Services:** Access to business support programs\n**Data Insights:** Your industry has a 23% GST registration rate\n**Regulatory Requirements:** State-specific licensing may also apply`,
-        appliesTo: portfolio.business
-          ? [
-              `${portfolio.business.businessName || "Your Business"}`,
-              portfolio.business.state || "Australia",
-            ]
-          : ["Business Owner"],
-        actions: [
-          "Register for GST via ATO Business Portal",
-          "Set up quarterly BAS reporting",
-          "Review state licensing requirements",
-          "Explore business support programs",
-        ],
-        citations: [
-          {
-            title: "GST Registration Requirements",
-            source: "ATO Dataset" as const,
-          },
-          {
-            title: "Business Support Programs",
-            source: "Federal Register" as const,
-          },
-          { title: "Industry Statistics", source: "ABS API" as const },
-        ],
-        jurisdictions: [
-          {
-            level: "federal" as const,
-            name: "Australian Taxation Office",
-            role: "GST Registration",
-          },
-          {
-            level: "state" as const,
-            name: portfolio.business?.state || "State Government",
-            role: "Business Licensing",
-          },
-          {
-            level: "local" as const,
-            name: portfolio.business?.localGov || "Local Council",
-            role: "Permits & Approvals",
-          },
-        ],
-        quickSuggestions: [
-          "How do I lodge my first BAS?",
-          "What business grants are available?",
-          "Show me industry benchmarks",
-          "What local permits do I need?",
-        ],
-        checklistItems: [
-          {
-            title: "Register for GST",
-            description: "Complete GST registration via ATO",
-            agency: "Australian Taxation Office",
-            priority: "high" as const,
-            category: "tax" as const,
-          },
-          {
-            title: "Set up BAS reporting",
-            description: "Configure quarterly business activity statements",
-            agency: "Australian Taxation Office",
-            priority: "high" as const,
-            category: "tax" as const,
-          },
-        ],
+      const aiResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content:
+          data?.message?.content ||
+          "I hit a bureaucratic snag and couldn't draft a reply. Please try again.",
+        timestamp: new Date(),
+        metadata: data?.message?.metadata,
+        showForm: data?.message?.showForm,
       };
-    }
 
-    // Default universal response
-    return {
-      content: `I can help you with "${question}" across multiple areas:\n\n${challengeAreas
-        .map(
-          (area) =>
-            `**${challengeConfig[area].label}:** Relevant requirements and opportunities`
-        )
-        .join("\n")}\n\nWhat specific aspect would you like to explore first?`,
-      appliesTo: portfolio.business
-        ? [`${portfolio.business.businessName || "Your Business"}`]
-        : ["Individual"],
-      actions: [
-        "Explore specific requirements",
-        "Review applicable regulations",
-        "Check available support",
-      ],
-      citations: [
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("Chat error", error);
+      setMessages((prev) => [
+        ...prev,
         {
-          title: "Australian Government Requirements",
-          source: "Federal Register" as const,
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content:
+            "The compliance hotline is busy and I couldn't reach the model. Please retry in a moment.",
+          timestamp: new Date(),
         },
-      ],
-      jurisdictions: [
-        {
-          level: "federal" as const,
-          name: "Australian Government",
-          role: "Policy & Legislation",
-        },
-        {
-          level: "state" as const,
-          name: "State Government",
-          role: "Implementation",
-        },
-        {
-          level: "local" as const,
-          name: "Local Government",
-          role: "Local Requirements",
-        },
-      ],
-      quickSuggestions: challengeAreas.map(
-        (area) =>
-          `Tell me more about ${challengeConfig[area].label.toLowerCase()}`
-      ),
-      checklistItems: [],
-    };
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleAddToChecklist = (item: any) => {
@@ -680,36 +498,69 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="drawer lg:drawer-open min-h-screen">
-      <input
-        id="drawer-toggle"
-        type="checkbox"
-        className="drawer-toggle"
-        checked={sidebarOpen}
-        onChange={() => setSidebarOpen(!sidebarOpen)}
-      />
-
-      {/* Compact Sidebar */}
-      <div className="drawer-side">
-        <label htmlFor="drawer-toggle" className="drawer-overlay"></label>
-        <aside className="min-h-full w-64 bg-base-100 border-r border-base-300 flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-base-300">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="text-lg font-bold text-red">
-                RedTape
-              </Link>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="btn btn-ghost btn-sm btn-square lg:hidden"
-              >
-                <X className="w-4 h-4" />
-              </button>
+    <div className="min-h-screen">
+      <SignedOut>
+        <div className="min-h-screen bg-base-200 flex items-center justify-center px-4">
+          <div className="bg-base-100 border border-base-300 rounded-xl p-6 shadow-lg max-w-md w-full space-y-4">
+            <div className="flex items-center gap-3">
+              <Shield className="w-6 h-6 text-primary" />
+              <div>
+                <p className="text-sm uppercase tracking-wide text-base-content/60">
+                  Restricted Access
+                </p>
+                <h1 className="text-xl font-semibold">RedTape Dashboard</h1>
+              </div>
+            </div>
+            <p className="text-sm text-base-content/70">
+              Please sign in to continue. We need to confirm your identity
+              before issuing any compliance guidance.
+            </p>
+            <div className="space-y-2">
+              <SignInButton mode="modal">
+                <button className="btn btn-primary w-full">Sign in</button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="btn btn-ghost w-full">Create an account</button>
+              </SignUpButton>
             </div>
           </div>
+        </div>
+      </SignedOut>
 
-          {/* Contextual Portfolio Modules */}
-          <div className="p-4 border-b border-base-300">
+      <SignedIn>
+        <div className="drawer lg:drawer-open min-h-screen">
+          <input
+            id="drawer-toggle"
+            type="checkbox"
+            className="drawer-toggle"
+            checked={sidebarOpen}
+            onChange={() => setSidebarOpen(!sidebarOpen)}
+          />
+
+          {/* Compact Sidebar */}
+          <div className="drawer-side">
+            <label htmlFor="drawer-toggle" className="drawer-overlay"></label>
+            <aside className="min-h-full w-64 bg-base-100 border-r border-base-300 flex flex-col">
+              {/* Header */}
+              <div className="p-4 border-b border-base-300">
+                <div className="flex items-center justify-between">
+                  <Link href="/" className="text-lg font-bold text-red">
+                    RedTape
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <UserButton afterSignOutUrl="/" />
+                    <button
+                      onClick={() => setSidebarOpen(false)}
+                      className="btn btn-ghost btn-sm btn-square lg:hidden"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contextual Portfolio Modules */}
+              <div className="p-4 border-b border-base-300">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">
               Your Profiles
             </h3>
@@ -2748,6 +2599,8 @@ export default function DashboardPage() {
           onClose={() => setShowMemoryToast(false)}
         />
       )}
+        </div>
+      </SignedIn>
     </div>
   );
 }
