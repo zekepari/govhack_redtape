@@ -38,6 +38,27 @@ import { MemoryToast } from "../components/MemoryToast";
 
 type ChallengeArea = "tax" | "services" | "data" | "compliance";
 
+const postcodeLocalGovMap: Record<string, { state: string; localGov: string }> =
+  {
+    "2000": { state: "New South Wales", localGov: "City of Sydney" },
+    "3000": { state: "Victoria", localGov: "City of Melbourne" },
+    "4000": { state: "Queensland", localGov: "Brisbane City Council" },
+    "5000": { state: "South Australia", localGov: "City of Adelaide" },
+    "6000": { state: "Western Australia", localGov: "City of Perth" },
+    "7000": { state: "Tasmania", localGov: "City of Hobart" },
+    "0800": { state: "Northern Territory", localGov: "City of Darwin" },
+    "2600": { state: "Australian Capital Territory", localGov: "Canberra" },
+  };
+
+const resolveLocalGov = (postcode?: string, fallbackState?: string) => {
+  if (postcode && postcodeLocalGovMap[postcode]) {
+    return postcodeLocalGovMap[postcode];
+  }
+  return fallbackState
+    ? { state: fallbackState, localGov: undefined }
+    : { state: undefined, localGov: undefined };
+};
+
 interface Citation {
   title: string;
   source: "Federal Register" | "ATO Dataset" | "ABS API" | "State Legislation";
@@ -337,7 +358,7 @@ const handleAddToChecklist = (item: any) => {
         abn: data.abn || cleanedAbn,
         postcode: data.postcode,
         state: data.state,
-        localGov: data.localGov,
+        localGov: resolveLocalGov(data.postcode, data.state).localGov,
       };
 
       setBusinessContext(businessData);
