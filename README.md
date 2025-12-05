@@ -1,36 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+RedTape is a Next.js 15 app that pairs Clerk auth with an Azure OpenAI-powered universal assistant for tax, services, and compliance. Portfolio data and the universal checklist are now persisted to `localStorage` so users keep context between sessions; a settings page lets users reset local data and sign out.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# or: bun dev / pnpm dev / yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 and sign in with Clerk to access the dashboard and settings. Add your Azure OpenAI credentials in `.env` and set `ABR_GUID` for live ABN lookups.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key Paths
+- `app/dashboard/page.tsx` — main assistant UI and forms
+- `app/settings/page.tsx` — account info, local reset, logout
+- `app/contexts/PortfolioContext.tsx` — portfolio/checklist state (persisted to localStorage)
+- `app/api/chat/route.ts` — Azure OpenAI chat endpoint
+- `app/api/abn/route.ts` — ABR lookup proxy
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Resetting Local Data
+Use the Settings page “Reset profile & checklist” or clear the `redtape-portfolio-v1` key from browser storage. Settings also provides a Clerk logout button.

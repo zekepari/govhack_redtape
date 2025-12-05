@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PortfolioProvider } from "./contexts/PortfolioContext";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,12 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="redtape">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-base-100 text-neutral`}
-      >
-        <PortfolioProvider>{children}</PortfolioProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" data-theme="redtape">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-base-100 text-neutral`}
+        >
+          <PortfolioProvider>{children}</PortfolioProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

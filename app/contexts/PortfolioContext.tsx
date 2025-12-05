@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useReducer, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useReducer,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
 
 // Types
 export type ContextMode =
@@ -145,7 +152,8 @@ type PortfolioAction =
   | { type: "TOGGLE_CHECKLIST_ITEM"; payload: { id: string } }
   | { type: "REMOVE_CHECKLIST_ITEM"; payload: { id: string } }
   | { type: "CONFIRM_UPDATE"; payload: { field: string } }
-  | { type: "UNDO_UPDATE"; payload: { field: string } };
+  | { type: "UNDO_UPDATE"; payload: { field: string } }
+  | { type: "HYDRATE_STATE"; payload: PortfolioState };
 
 // Initial state
 const initialState: PortfolioState = {
@@ -155,12 +163,20 @@ const initialState: PortfolioState = {
   checklist: [],
 };
 
+const STORAGE_KEY = "redtape-portfolio-v1";
+
 // Reducer
 function portfolioReducer(
   state: PortfolioState,
   action: PortfolioAction
 ): PortfolioState {
   switch (action.type) {
+    case "HYDRATE_STATE":
+      return {
+        ...state,
+        ...action.payload,
+      };
+
     case "UPDATE_BUSINESS_INFO":
       return {
         ...state,
@@ -303,11 +319,38 @@ const PortfolioContext = createContext<{
   ) => void;
   toggleChecklistItem: (id: string) => void;
   removeChecklistItem: (id: string) => void;
+  resetAll: () => void;
 } | null>(null);
 
 // Provider
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(portfolioReducer, initialState);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Hydrate from localStorage once on client
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        dispatch({ type: "HYDRATE_STATE", payload: parsed });
+      } catch (error) {
+        console.error("Failed to hydrate portfolio state", error);
+      }
+    }
+    setHydrated(true);
+  }, []);
+
+  // Persist to localStorage when state changes
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error("Failed to persist portfolio state", error);
+    }
+  }, [state, hydrated]);
 
   // Helper functions
   const updateBusinessInfo = (info: Partial<BusinessInfo>) => {
@@ -360,7 +403,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       window.confirm("Are you sure you want to clear all your portfolio data?")
     ) {
       dispatch({ type: "CLEAR_PORTFOLIO" });
+      localStorage.removeItem(STORAGE_KEY);
     }
+  };
+
+  const resetAll = () => {
+    dispatch({ type: "CLEAR_PORTFOLIO" });
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
@@ -379,6 +428,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         addChecklistItem,
         toggleChecklistItem,
         removeChecklistItem,
+        resetAll,
       }}
     >
       {children}

@@ -19,98 +19,92 @@ const SYSTEM_PROMPT = `You are "RedTape", an officious Australian government lia
 - Reference forms, lodgment pathways, and contact channels.
 - Flag caveats, eligibility checks, and timelines.
 - Keep replies crisp (aim for ~120 words) while sounding bureaucratic.
-When helpful, populate the set_ui_metadata tool to drive UI chips (challenge areas, appliesTo, actions, citations, quickSuggestions, checklistItems, showForm). Only include items you are confident about.`;
+- Always return a user-facing answer plus optional UI metadata in the JSON schema.
+- Use showForm when the user is clearly asking about ABN/GST/permits/business setup (abn, business-details), job loss (jobseeker-details), caring (carer-details), student benefits (student-details), or document analysis (document-upload/bank-integration).`;
 
-const uiMetadataTool = {
-  type: "function" as const,
-  name: "set_ui_metadata",
-  description:
-    "Populate dashboard metadata for the current reply: challenge areas, appliesTo chips, actions, citations, jurisdictions, quick suggestions, checklist items, and optional form to render.",
-  parameters: {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-      challengeAreas: {
-        type: "array",
-        items: {
-          type: "string",
-          enum: ["tax", "services", "data", "compliance"],
-        },
-      },
-      appliesTo: {
-        type: "array",
-        items: { type: "string" },
-      },
-      actions: {
-        type: "array",
-        items: { type: "string" },
-      },
-      citations: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            title: { type: "string" },
-            source: { type: "string" },
-            url: { type: "string" },
+const RESPONSE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    answer: { type: "string" },
+    metadata: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        challengeAreas: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["tax", "services", "data", "compliance"],
           },
         },
-      },
-      jurisdictions: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            level: {
-              type: "string",
-              enum: ["federal", "state", "local"],
-            },
-            name: { type: "string" },
-            role: { type: "string" },
-          },
-        },
-      },
-      quickSuggestions: {
-        type: "array",
-        items: { type: "string" },
-      },
-      checklistItems: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            dueDate: { type: "string" },
-            agency: { type: "string" },
-            priority: {
-              type: "string",
-              enum: ["high", "medium", "low"],
-            },
-            category: {
-              type: "string",
-              enum: ["tax", "services", "data", "compliance"],
+        appliesTo: { type: "array", items: { type: "string" } },
+        actions: { type: "array", items: { type: "string" } },
+        citations: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              title: { type: "string" },
+              source: { type: "string" },
+              url: { type: "string" },
             },
           },
         },
-      },
-      showForm: {
-        type: "string",
-        enum: [
-          "abn",
-          "business-details",
-          "bank-integration",
-          "document-upload",
-          "jobseeker-details",
-          "carer-details",
-          "student-details",
-        ],
+        jurisdictions: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              level: {
+                type: "string",
+                enum: ["federal", "state", "local"],
+              },
+              name: { type: "string" },
+              role: { type: "string" },
+            },
+          },
+        },
+        quickSuggestions: { type: "array", items: { type: "string" } },
+        checklistItems: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              title: { type: "string" },
+              description: { type: "string" },
+              dueDate: { type: "string" },
+              agency: { type: "string" },
+              priority: {
+                type: "string",
+                enum: ["high", "medium", "low"],
+              },
+              category: {
+                type: "string",
+                enum: ["tax", "services", "data", "compliance"],
+              },
+            },
+          },
+        },
       },
     },
+    showForm: {
+      type: "string",
+      enum: [
+        "abn",
+        "business-details",
+        "bank-integration",
+        "document-upload",
+        "jobseeker-details",
+        "carer-details",
+        "student-details",
+      ],
+    },
   },
+  required: ["answer"],
 };
 
 export async function POST(request: Request) {
@@ -148,13 +142,33 @@ export async function POST(request: Request) {
       model: "gpt-5-mini",
       input: userMessages,
       instructions: `${SYSTEM_PROMPT}\n${portfolioSummary}`,
-      tools: [uiMetadataTool],
-      max_output_tokens: 800,
+      text: {
+        format: {
+          type: "json_schema",
+          name: "redtape_payload",
+          schema: RESPONSE_SCHEMA,
+          strict: false,
+        },
+        verbosity: "low",
+      },
+      reasoning: { effort: "low" },
     });
 
-    let content = response.output_text || "";
+    let content = "";
     let metadata: Record<string, unknown> | undefined;
     let showForm: string | undefined;
+
+    if (response.output_text) {
+      try {
+        const parsed = JSON.parse(response.output_text);
+        content = parsed?.answer || "";
+        metadata = parsed?.metadata || undefined;
+        showForm = parsed?.showForm || undefined;
+      } catch (error) {
+        console.error("Failed to parse structured output", error);
+        content = response.output_text;
+      }
+    }
 
     if (!content && Array.isArray(response.output)) {
       const textParts: string[] = [];
@@ -168,22 +182,6 @@ export async function POST(request: Request) {
         }
       });
       content = textParts.join("\n\n");
-    }
-
-    if (Array.isArray(response.output)) {
-      response.output.forEach((item: any) => {
-        if (item.type === "function_call" && item.name === "set_ui_metadata") {
-          try {
-            const parsed = JSON.parse(item.arguments || "{}");
-            metadata = parsed || undefined;
-            if (parsed?.showForm) {
-              showForm = parsed.showForm;
-            }
-          } catch (error) {
-            console.error("Failed to parse metadata tool arguments", error);
-          }
-        }
-      });
     }
 
     return NextResponse.json({

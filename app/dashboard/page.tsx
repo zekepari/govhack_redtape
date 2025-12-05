@@ -2,13 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignOutButton } from "@clerk/nextjs";
 import {
   User,
   Briefcase,
@@ -246,27 +240,24 @@ export default function DashboardPage() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const sendChatMessage = async (content: string) => {
+    if (!content.trim()) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: inputMessage,
+      content,
       timestamp: new Date(),
     };
 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    setInputMessage("");
     setIsTyping(true);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: updatedMessages.map(({ role, content }) => ({
             role,
@@ -311,183 +302,125 @@ export default function DashboardPage() {
     }
   };
 
-  const handleAddToChecklist = (item: any) => {
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+    const messageToSend = inputMessage;
+    setInputMessage("");
+    await sendChatMessage(messageToSend);
+  };
+
+const handleAddToChecklist = (item: any) => {
     addChecklistItem(item);
     // Show confirmation toast
     setShowMemoryToast(true);
   };
 
-  const handleAbnSubmit = () => {
-    if (!abnInput.trim()) return;
+  const handleAbnSubmit = async () => {
+    const cleanedAbn = abnInput.replace(/\s+/g, "");
+    if (!cleanedAbn) return;
 
-    setIsTyping(true);
+    try {
+      const res = await fetch("/api/abn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ abn: cleanedAbn }),
+      });
 
-    // Mock ABN lookup - only returns business name, postcode, state
-    setTimeout(() => {
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      const data = await res.json();
+
       const businessData: BusinessContext = {
-        businessName: "Painters Club QLD",
-        abn: abnInput,
-        postcode: "4507",
-        state: "Queensland",
-        localGov: "City of Moreton Bay",
+        businessName: data.entityName || "Business",
+        abn: data.abn || cleanedAbn,
+        postcode: data.postcode,
+        state: data.state,
+        localGov: data.localGov,
       };
 
       setBusinessContext(businessData);
       setShowMemoryToast(true);
 
-      const response: ChatMessage = {
-        id: (Date.now() + 2).toString(),
-        role: "assistant",
-        content:
-          "Great! I found your business: Painters Club QLD, located in postcode 4507, Queensland (City of Moreton Bay).\n\nTo give you the most accurate compliance guidance, I need a few more details:",
-        timestamp: new Date(),
-        showForm: "business-details",
-      };
-
-      setMessages((prev) => [...prev, response]);
-      setIsTyping(false);
+      await sendChatMessage(
+        `ABN provided and verified: ${businessData.businessName} (ABN ${businessData.abn})${businessData.postcode ? `, ${businessData.postcode}` : ""}${businessData.state ? `, ${businessData.state}` : ""}. Please continue with tailored guidance and request any further business details or forms if needed.`
+      );
+    } catch (error) {
+      console.error("ABN lookup failed", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 2).toString(),
+          role: "assistant",
+          content:
+            "I couldn't verify that ABN. Please check the 11 digits or try again.",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
       setAbnInput("");
-    }, 2000);
+    }
   };
 
-  const handleBusinessDetailsSubmit = () => {
-    setIsTyping(true);
+  const handleBusinessDetailsSubmit = async () => {
+    // Update business context with additional details
+    const updatedContext: BusinessContext = {
+      ...businessContext,
+      employees: parseInt(businessDetailsForm.employees) || 0,
+      contractors: parseInt(businessDetailsForm.contractors) || 0,
+      interstate: businessDetailsForm.interstate,
+      additionalInfo: businessDetailsForm.additionalInfo,
+      industry: businessContext.industry || "Business",
+    };
 
-    setTimeout(() => {
-      // Update business context with additional details
-      const updatedContext: BusinessContext = {
-        ...businessContext,
-        employees: parseInt(businessDetailsForm.employees) || 0,
-        contractors: parseInt(businessDetailsForm.contractors) || 0,
-        interstate: businessDetailsForm.interstate,
-        additionalInfo: businessDetailsForm.additionalInfo,
-        industry: "Painting Services",
-      };
+    setBusinessContext(updatedContext);
 
-      setBusinessContext(updatedContext);
+    // Add business owner role module
+    addRoleModule("businessOwner", {
+      businessName: updatedContext.businessName || "Business",
+      abn: updatedContext.abn || "",
+      industry: updatedContext.industry || "Business",
+      employees: parseInt(businessDetailsForm.employees) || 0,
+      contractors: parseInt(businessDetailsForm.contractors) || 0,
+      location: `${updatedContext.localGov || ""}${
+        updatedContext.localGov && updatedContext.state ? ", " : ""
+      }${updatedContext.state || ""}`,
+    });
 
-      const response: ChatMessage = {
-        id: (Date.now() + 3).toString(),
-        role: "assistant",
-        content: `Perfect! Now I understand your business:\n\n• Painters Club QLD\n• ${
-          businessDetailsForm.employees
-        } employees\n• ${businessDetailsForm.contractors} contractors\n• ${
-          businessDetailsForm.interstate
-            ? "Operating interstate"
-            : "Operating in Queensland only"
-        }\n\nFor comprehensive tax analysis, would you like to connect your business banking to automatically track expenses and income?`,
-        timestamp: new Date(),
-        showForm: "bank-integration",
-      };
+    await sendChatMessage(
+      `Business details provided: ${updatedContext.businessName || "Business"}${
+        updatedContext.abn ? ` (ABN ${updatedContext.abn})` : ""
+      }; employees: ${updatedContext.employees}; contractors: ${
+        updatedContext.contractors
+      }; ${
+        updatedContext.interstate ? "operates interstate" : "single state"
+      }${updatedContext.state ? ` (${updatedContext.state})` : ""}. Please advise next steps and request further info or forms if needed.`
+    );
 
-      setMessages((prev) => [...prev, response]);
-
-      // Add business owner role module
-      addRoleModule("businessOwner", {
-        businessName: businessContext.businessName || "Business",
-        abn: businessContext.abn || "",
-        industry: "Painting Services",
-        employees: parseInt(businessDetailsForm.employees) || 0,
-        contractors: parseInt(businessDetailsForm.contractors) || 0,
-        location: `${businessContext.localGov}, ${businessContext.state}`,
-      });
-
-      setIsTyping(false);
-
-      // Reset form
-      setBusinessDetailsForm({
-        employees: "",
-        contractors: "",
-        interstate: false,
-        additionalInfo: "",
-      });
-    }, 2000);
+    // Reset form
+    setBusinessDetailsForm({
+      employees: "",
+      contractors: "",
+      interstate: false,
+      additionalInfo: "",
+    });
   };
 
   const handleQuickSuggestion = (suggestion: string) => {
-    setInputMessage(suggestion);
-    setTimeout(() => handleSendMessage(), 100);
+    sendChatMessage(suggestion);
   };
 
-  const handleDocumentUpload = (file: File) => {
+  const handleDocumentUpload = async (file: File) => {
     setUploadedFile(file);
-    setIsTyping(true);
-
-    // Mock document analysis
-    setTimeout(() => {
-      const corporateData: CorporateContext = {
-        companyName: "Brisbane Development Corp",
-        projectType: "Mixed-Use Development",
-        location: "Brisbane CBD",
-        uploadedDocs: [file.name],
-        complianceGaps: [
-          {
-            category: "Environmental",
-            status: "covered",
-            requirements: [
-              "Environmental Impact Assessment",
-              "Water Management Plan",
-            ],
-          },
-          {
-            category: "Planning & Zoning",
-            status: "partial",
-            requirements: [
-              "Development Application",
-              "Building Code Compliance",
-              "Heritage Assessment (MISSING)",
-            ],
-          },
-          {
-            category: "Safety & Construction",
-            status: "missing",
-            requirements: [
-              "Construction Safety Plan (MISSING)",
-              "Fire Safety Design (MISSING)",
-              "Accessibility Compliance (MISSING)",
-            ],
-          },
-        ],
-      };
-
-      setCorporateContext(corporateData);
-      setShowMemoryToast(true);
-
-      const response: ChatMessage = {
-        id: (Date.now() + 3).toString(),
-        role: "assistant",
-        content: `I've analyzed your document "${file.name}" for the Brisbane development project.\n\nHere's your compliance coverage analysis:`,
-        timestamp: new Date(),
-        metadata: {
-          appliesTo: [
-            "Brisbane Development Corp",
-            "Mixed-Use Development",
-            "Brisbane CBD",
-          ],
-          actions: [
-            "Obtain Heritage Assessment from Brisbane City Council",
-            "Develop Construction Safety Plan (AS 1657:2018)",
-            "Complete Fire Safety Design (BCA compliance)",
-            "Ensure accessibility compliance (DDA requirements)",
-          ],
-          citations: [
-            "Brisbane City Plan 2014",
-            "Queensland Development Code",
-            "Building Code of Australia",
-            "Disability Discrimination Act 1992",
-          ],
-          quickSuggestions: [
-            "How do I get a Heritage Assessment?",
-            "What's required for fire safety design?",
-            "Brisbane City Council development fees",
-            "Timeline for development approval",
-          ],
-        },
-      };
-
-      setMessages((prev) => [...prev, response]);
-      setIsTyping(false);
-    }, 3000);
+    setCorporateContext((prev) => ({
+      ...prev,
+      uploadedDocs: [...(prev.uploadedDocs || []), file.name],
+    }));
+    setShowMemoryToast(true);
+    await sendChatMessage(
+      `Uploaded document \"${file.name}\". Please analyze for compliance gaps and recommend next steps.`
+    );
   };
 
   // Remove context selection - we now use universal chat
@@ -498,69 +431,36 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <SignedOut>
-        <div className="min-h-screen bg-base-200 flex items-center justify-center px-4">
-          <div className="bg-base-100 border border-base-300 rounded-xl p-6 shadow-lg max-w-md w-full space-y-4">
-            <div className="flex items-center gap-3">
-              <Shield className="w-6 h-6 text-primary" />
-              <div>
-                <p className="text-sm uppercase tracking-wide text-base-content/60">
-                  Restricted Access
-                </p>
-                <h1 className="text-xl font-semibold">RedTape Dashboard</h1>
-              </div>
-            </div>
-            <p className="text-sm text-base-content/70">
-              Please sign in to continue. We need to confirm your identity
-              before issuing any compliance guidance.
-            </p>
-            <div className="space-y-2">
-              <SignInButton mode="modal">
-                <button className="btn btn-primary w-full">Sign in</button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="btn btn-ghost w-full">Create an account</button>
-              </SignUpButton>
+    <div className="drawer lg:drawer-open min-h-screen">
+      <input
+        id="drawer-toggle"
+        type="checkbox"
+        className="drawer-toggle"
+        checked={sidebarOpen}
+        onChange={() => setSidebarOpen(!sidebarOpen)}
+      />
+
+      {/* Compact Sidebar */}
+      <div className="drawer-side">
+        <label htmlFor="drawer-toggle" className="drawer-overlay"></label>
+        <aside className="min-h-full w-64 bg-base-100 border-r border-base-300 flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-base-300">
+            <div className="flex items-center justify-between">
+              <Link href="/" className="text-lg font-bold text-red">
+                RedTape
+              </Link>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="btn btn-ghost btn-sm btn-square lg:hidden"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        </div>
-      </SignedOut>
 
-      <SignedIn>
-        <div className="drawer lg:drawer-open min-h-screen">
-          <input
-            id="drawer-toggle"
-            type="checkbox"
-            className="drawer-toggle"
-            checked={sidebarOpen}
-            onChange={() => setSidebarOpen(!sidebarOpen)}
-          />
-
-          {/* Compact Sidebar */}
-          <div className="drawer-side">
-            <label htmlFor="drawer-toggle" className="drawer-overlay"></label>
-            <aside className="min-h-full w-64 bg-base-100 border-r border-base-300 flex flex-col">
-              {/* Header */}
-              <div className="p-4 border-b border-base-300">
-                <div className="flex items-center justify-between">
-                  <Link href="/" className="text-lg font-bold text-red">
-                    RedTape
-                  </Link>
-                  <div className="flex items-center gap-2">
-                    <UserButton afterSignOutUrl="/" />
-                    <button
-                      onClick={() => setSidebarOpen(false)}
-                      className="btn btn-ghost btn-sm btn-square lg:hidden"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contextual Portfolio Modules */}
-              <div className="p-4 border-b border-base-300">
+          {/* Contextual Portfolio Modules */}
+          <div className="p-4 border-b border-base-300">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">
               Your Profiles
             </h3>
@@ -852,32 +752,40 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setMessages([
-                    {
-                      id: "welcome-new",
-                      role: "assistant",
-                      content:
-                        "Hi! I'm your RedTape assistant. I can help you with tax compliance, government services, data insights, and regulatory navigation across all levels of Australian government. What would you like to know?",
-                      timestamp: new Date(),
-                      metadata: {
-                        quickSuggestions: [
-                          "How do I register for GST?",
-                          "What support is available after job loss?",
-                          "Show me employment statistics for my area",
-                          "What permits do I need for my business?",
-                        ],
+              <div className="flex items-center gap-2">
+                <Link href="/settings" className="btn btn-ghost btn-sm">
+                  Settings
+                </Link>
+                <SignOutButton redirectUrl="/">
+                  <button className="btn btn-outline btn-sm">Log out</button>
+                </SignOutButton>
+                <button
+                  onClick={() => {
+                    setMessages([
+                      {
+                        id: "welcome-new",
+                        role: "assistant",
+                        content:
+                          "Hi! I'm your RedTape assistant. I can help you with tax compliance, government services, data insights, and regulatory navigation across all levels of Australian government. What would you like to know?",
+                        timestamp: new Date(),
+                        metadata: {
+                          quickSuggestions: [
+                            "How do I register for GST?",
+                            "What support is available after job loss?",
+                            "Show me employment statistics for my area",
+                            "What permits do I need for my business?",
+                          ],
+                        },
                       },
-                    },
-                  ]);
-                  setBusinessContext({});
-                  setCorporateContext({});
-                }}
-                className="btn btn-ghost btn-sm"
-              >
-                New Chat
-              </button>
+                    ]);
+                    setBusinessContext({});
+                    setCorporateContext({});
+                  }}
+                  className="btn btn-ghost btn-sm"
+                >
+                  New Chat
+                </button>
+              </div>
             </div>
           </header>
 
@@ -991,27 +899,9 @@ export default function DashboardPage() {
                               <div className="flex justify-center">
                                 <button
                                   onClick={() => {
-                                    // Skip ABN and continue with general business guidance
-                                    const response: ChatMessage = {
-                                      id: (Date.now() + 5).toString(),
-                                      role: "assistant",
-                                      content:
-                                        "No problem! I can still help you with general painting business requirements in Queensland. What would you like to know about?",
-                                      timestamp: new Date(),
-                                      metadata: {
-                                        appliesTo: [
-                                          "Painting Business",
-                                          "Queensland",
-                                        ],
-                                        quickSuggestions: [
-                                          "What licenses do I need?",
-                                          "Fair Work obligations",
-                                          "Tax requirements",
-                                          "Safety regulations",
-                                        ],
-                                      },
-                                    };
-                                    setMessages((prev) => [...prev, response]);
+                                    sendChatMessage(
+                                      "Skipping ABN lookup for now. Please continue with general guidance and forms as needed."
+                                    );
                                   }}
                                   className="btn btn-ghost btn-sm"
                                 >
@@ -1182,87 +1072,16 @@ export default function DashboardPage() {
 
                                 <button
                                   onClick={() => {
-                                    setIsTyping(true);
-                                    setTimeout(() => {
-                                      const response: ChatMessage = {
-                                        id: (Date.now() + 4).toString(),
-                                        role: "assistant",
-                                        content: `Based on your situation, here's what you're eligible for:\n\n**JobSeeker Payment:** $${
-                                          jobseekerForm.dependents === "0"
-                                            ? "693.10"
-                                            : "745.20"
-                                        } per fortnight\n**Rent Assistance:** ${
-                                          jobseekerForm.housingStatus === "rent"
-                                            ? "Up to $157.20/fortnight available"
-                                            : "Not applicable (homeowner)"
-                                        }\n**Training Support:** Free access to Skills Training programs\n\nNext steps:`,
-                                        timestamp: new Date(),
-                                        metadata: {
-                                          challengeAreas: [
-                                            "services",
-                                            "tax",
-                                            "data",
-                                          ],
-                                          appliesTo: [
-                                            "Job Seeker",
-                                            `${jobseekerForm.dependents} Dependents`,
-                                            jobseekerForm.housingStatus ===
-                                            "rent"
-                                              ? "Renter"
-                                              : "Homeowner",
-                                          ],
-                                          actions: [
-                                            jobseekerForm.hasMyGov
-                                              ? "Apply for JobSeeker via myGov"
-                                              : "Create myGov account first",
-                                            "Book Centrelink appointment",
-                                            jobseekerForm.housingStatus ===
-                                            "rent"
-                                              ? "Apply for Rent Assistance"
-                                              : "Review other support options",
-                                            "Register for Skills Training Program",
-                                          ],
-                                          citations: [
-                                            {
-                                              title: "JobSeeker Payment Rates",
-                                              source: "Federal Register",
-                                            },
-                                            {
-                                              title:
-                                                "Rent Assistance Guidelines",
-                                              source: "ATO Dataset",
-                                            },
-                                            {
-                                              title: "Employment Services",
-                                              source: "ABS API",
-                                            },
-                                          ],
-                                          quickSuggestions: [
-                                            "How do I book a Centrelink appointment?",
-                                            "What training programs are available?",
-                                            "How long does approval take?",
-                                            "Can I work while on JobSeeker?",
-                                          ],
-                                        },
-                                      };
-                                      setMessages((prev) => [
-                                        ...prev,
-                                        response,
-                                      ]);
-
-                                      // Add jobseeker role module
-                                      addRoleModule("jobseeker", {
-                                        hasMyGov: jobseekerForm.hasMyGov,
-                                        previousIncome:
-                                          jobseekerForm.previousIncome,
-                                        dependents: jobseekerForm.dependents,
-                                        housingStatus:
-                                          jobseekerForm.housingStatus,
-                                      });
-
-                                      setIsTyping(false);
-                                      setShowMemoryToast(true);
-                                    }, 2000);
+                                    addRoleModule("jobseeker", {
+                                      hasMyGov: jobseekerForm.hasMyGov,
+                                      previousIncome: jobseekerForm.previousIncome,
+                                      dependents: jobseekerForm.dependents,
+                                      housingStatus: jobseekerForm.housingStatus,
+                                    });
+                                    setShowMemoryToast(true);
+                                    sendChatMessage(
+                                      `Jobseeker details submitted: has myGov ${jobseekerForm.hasMyGov ? "yes" : "no"}, previous income ${jobseekerForm.previousIncome || "not provided"}, dependents ${jobseekerForm.dependents || "0"}, housing ${jobseekerForm.housingStatus || "not provided"}. Please assess eligibility, required documents, and next steps.`
+                                    );
                                   }}
                                   className="btn btn-primary btn-sm w-full"
                                 >
@@ -1383,83 +1202,17 @@ export default function DashboardPage() {
 
                                 <button
                                   onClick={() => {
-                                    setIsTyping(true);
-                                    setTimeout(() => {
-                                      const isEligibleForPayment =
-                                        carerForm.hoursPerWeek === "constant";
-                                      const response: ChatMessage = {
-                                        id: (Date.now() + 4).toString(),
-                                        role: "assistant",
-                                        content: `Based on your caring situation, here's what you're eligible for:\n\n**${
-                                          isEligibleForPayment
-                                            ? "Carer Payment"
-                                            : "Carer Allowance"
-                                        }:** ${
-                                          isEligibleForPayment
-                                            ? "$971.50 per fortnight"
-                                            : "$144.80 per fortnight"
-                                        }\n**Carer Gateway:** Free counselling and respite services\n**Medicare:** Additional rebates for carer health checks\n\nYour next steps:`,
-                                        timestamp: new Date(),
-                                        metadata: {
-                                          challengeAreas: ["services", "data"],
-                                          appliesTo: [
-                                            "Carer",
-                                            carerForm.careType === "elderly"
-                                              ? "Elderly Care"
-                                              : "Disability Care",
-                                            carerForm.hoursPerWeek ===
-                                            "constant"
-                                              ? "Full-time Carer"
-                                              : "Part-time Carer",
-                                          ],
-                                          actions: [
-                                            isEligibleForPayment
-                                              ? "Apply for Carer Payment"
-                                              : "Apply for Carer Allowance",
-                                            "Register with Carer Gateway",
-                                            "Book carer health check with GP",
-                                            "Access respite services in your area",
-                                          ],
-                                          citations: [
-                                            {
-                                              title: "Carer Payment Guidelines",
-                                              source: "Federal Register",
-                                            },
-                                            {
-                                              title: "Carer Support Services",
-                                              source: "ABS API",
-                                            },
-                                            {
-                                              title: "Medicare Carer Benefits",
-                                              source: "Federal Register",
-                                            },
-                                          ],
-                                          quickSuggestions: [
-                                            "How do I apply online?",
-                                            "What documents do I need?",
-                                            "Can I work while caring?",
-                                            "Where can I get respite help?",
-                                          ],
-                                        },
-                                      };
-                                      setMessages((prev) => [
-                                        ...prev,
-                                        response,
-                                      ]);
-
-                                      // Add carer role module
-                                      addRoleModule("carer", {
-                                        careType: carerForm.careType,
-                                        hoursPerWeek: carerForm.hoursPerWeek,
-                                        relationshipToCared:
-                                          carerForm.relationshipToCared,
-                                        hasOtherIncome:
-                                          carerForm.hasOtherIncome,
-                                      });
-
-                                      setIsTyping(false);
-                                      setShowMemoryToast(true);
-                                    }, 2000);
+                                    addRoleModule("carer", {
+                                      careType: carerForm.careType,
+                                      hoursPerWeek: carerForm.hoursPerWeek,
+                                      relationshipToCared:
+                                        carerForm.relationshipToCared,
+                                      hasOtherIncome: carerForm.hasOtherIncome,
+                                    });
+                                    setShowMemoryToast(true);
+                                    sendChatMessage(
+                                      `Carer details submitted: care type ${carerForm.careType || "not provided"}, hours ${carerForm.hoursPerWeek || "not provided"}, other income ${carerForm.hasOtherIncome ? "yes" : "no"}, relationship ${carerForm.relationshipToCared || "not provided"}. Please assess entitlements and outline next steps or forms.`
+                                    );
                                   }}
                                   className="btn btn-primary btn-sm w-full"
                                 >
@@ -1586,89 +1339,16 @@ export default function DashboardPage() {
 
                                 <button
                                   onClick={() => {
-                                    setIsTyping(true);
-                                    setTimeout(() => {
-                                      const needsToLodge =
-                                        studentForm.annualIncome !==
-                                          "under-10k" &&
-                                        studentForm.annualIncome !== "10k-18k";
-                                      const response: ChatMessage = {
-                                        id: (Date.now() + 4).toString(),
-                                        role: "assistant",
-                                        content: `Here's your tax situation as a ${
-                                          studentForm.studyType
-                                        } student:\n\n**Tax Threshold:** ${
-                                          needsToLodge
-                                            ? "You need to lodge a tax return"
-                                            : "You may not need to lodge (under $18,200)"
-                                        }\n**Deductions Available:** Course materials, work uniforms, transport\n**HECS Impact:** ${
-                                          studentForm.hasHECSDebt
-                                            ? "Repayments start at $51,550 income"
-                                            : "No HECS debt to consider"
-                                        }\n\nYour personalized guidance:`,
-                                        timestamp: new Date(),
-                                        metadata: {
-                                          challengeAreas: ["tax", "services"],
-                                          appliesTo: [
-                                            studentForm.studyType ===
-                                            "university"
-                                              ? "University Student"
-                                              : "TAFE Student",
-                                            studentForm.workType === "retail"
-                                              ? "Retail Worker"
-                                              : "Part-time Worker",
-                                            studentForm.annualIncome ||
-                                              "Low Income",
-                                          ],
-                                          actions: [
-                                            needsToLodge
-                                              ? "Lodge tax return by 31 October"
-                                              : "Consider lodging for refund",
-                                            "Save receipts for textbooks and course materials",
-                                            "Record work-related transport costs",
-                                            studentForm.hasHECSDebt
-                                              ? "Monitor income for HECS threshold"
-                                              : "Keep study expense records",
-                                          ],
-                                          citations: [
-                                            {
-                                              title: "Student Tax Obligations",
-                                              source: "ATO Dataset",
-                                            },
-                                            {
-                                              title:
-                                                "Education Deductions Guide",
-                                              source: "Federal Register",
-                                            },
-                                            {
-                                              title: "HECS-HELP Information",
-                                              source: "ATO Dataset",
-                                            },
-                                          ],
-                                          quickSuggestions: [
-                                            "Can I claim my laptop?",
-                                            "What about textbook costs?",
-                                            "How do I track work expenses?",
-                                            "When do HECS repayments start?",
-                                          ],
-                                        },
-                                      };
-                                      setMessages((prev) => [
-                                        ...prev,
-                                        response,
-                                      ]);
-
-                                      // Add student role module
-                                      addRoleModule("student", {
-                                        studyType: studentForm.studyType,
-                                        workType: studentForm.workType,
-                                        annualIncome: studentForm.annualIncome,
-                                        hasHECSDebt: studentForm.hasHECSDebt,
-                                      });
-
-                                      setIsTyping(false);
-                                      setShowMemoryToast(true);
-                                    }, 2000);
+                                    addRoleModule("student", {
+                                      studyType: studentForm.studyType,
+                                      workType: studentForm.workType,
+                                      annualIncome: studentForm.annualIncome,
+                                      hasHECSDebt: studentForm.hasHECSDebt,
+                                    });
+                                    setShowMemoryToast(true);
+                                    sendChatMessage(
+                                      `Student details submitted: study ${studentForm.studyType || "not provided"}, work ${studentForm.workType || "not provided"}, income ${studentForm.annualIncome || "not provided"}, HECS debt ${studentForm.hasHECSDebt ? "yes" : "no"}. Please provide tailored tax guidance and next steps.`
+                                    );
                                   }}
                                   className="btn btn-primary btn-sm w-full"
                                 >
@@ -1775,80 +1455,10 @@ export default function DashboardPage() {
                                   <button
                                     onClick={() => {
                                       if (bankForm.provider) {
-                                        // Mock bank connection and transaction analysis
-                                        setIsTyping(true);
-                                        setTimeout(() => {
-                                          const response: ChatMessage = {
-                                            id: (Date.now() + 3).toString(),
-                                            role: "assistant",
-                                            content: `Connected to ${bankForm.provider}! I've analyzed your business transactions:\n\n**Business Income:** $127,450 (last 12 months)\n**Business Expenses:** $34,200 (paint, equipment, fuel)\n**Tax Obligations:** GST registration required, $12,745 GST owed\n**Deductions Available:** $8,500 in vehicle expenses, $3,200 equipment depreciation\n\nWhat would you like to know about your tax situation?`,
-                                            timestamp: new Date(),
-                                            metadata: {
-                                              challengeAreas: [
-                                                "tax",
-                                                "compliance",
-                                                "data",
-                                              ],
-                                              appliesTo: [
-                                                "Painters Club QLD",
-                                                `${bankForm.provider} Connected`,
-                                                "GST Required",
-                                                "$127k Turnover",
-                                              ],
-                                              actions: [
-                                                "Register for GST immediately",
-                                                "Set up quarterly BAS lodgments",
-                                                "Claim vehicle expense deductions",
-                                                "Review equipment depreciation schedule",
-                                              ],
-                                              citations: [
-                                                {
-                                                  title:
-                                                    "GST Registration Requirements",
-                                                  source: "ATO Dataset",
-                                                },
-                                                {
-                                                  title:
-                                                    "Business Expense Deductions",
-                                                  source: "ATO Dataset",
-                                                },
-                                                {
-                                                  title: "BAS Lodgment Guide",
-                                                  source: "Federal Register",
-                                                },
-                                              ],
-                                              quickSuggestions: [
-                                                "How do I register for GST?",
-                                                "What can I claim as deductions?",
-                                                "When are my BAS due dates?",
-                                                "How much tax will I owe?",
-                                              ],
-                                            },
-                                          };
-                                          setMessages((prev) => [
-                                            ...prev,
-                                            response,
-                                          ]);
-
-                                          // Add comprehensive business module with tax data
-                                          addRoleModule("businessOwner", {
-                                            businessName:
-                                              businessContext.businessName ||
-                                              "Business",
-                                            abn: businessContext.abn || "",
-                                            industry: "Painting Services",
-                                            employees: 0, // Will be updated in business details
-                                            contractors: 0,
-                                            location: `${businessContext.localGov}, ${businessContext.state}`,
-                                            bankConnected: bankForm.provider,
-                                            annualIncome: 127450,
-                                            annualExpenses: 34200,
-                                            gstRequired: true,
-                                          });
-
-                                          setIsTyping(false);
-                                          setShowMemoryToast(true);
-                                        }, 3000);
+                                        sendChatMessage(
+                                          `Bank connection initiated: ${bankForm.provider}. Please analyze transactions (if available) and provide next compliance steps.`
+                                        );
+                                        setShowMemoryToast(true);
                                       }
                                     }}
                                     disabled={!bankForm.provider}
@@ -1858,19 +1468,9 @@ export default function DashboardPage() {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      // Skip bank integration, go to business details
-                                      const response: ChatMessage = {
-                                        id: (Date.now() + 3).toString(),
-                                        role: "assistant",
-                                        content:
-                                          "No problem! I can still help with compliance guidance. Let me get some basic business details:",
-                                        timestamp: new Date(),
-                                        showForm: "business-details",
-                                      };
-                                      setMessages((prev) => [
-                                        ...prev,
-                                        response,
-                                      ]);
+                                      sendChatMessage(
+                                        "Skipping bank integration for now. Continue guidance without bank data."
+                                      );
                                     }}
                                     className="btn btn-ghost btn-sm"
                                   >
@@ -2358,7 +1958,7 @@ export default function DashboardPage() {
                         Industry
                       </span>
                       <p className="font-medium">
-                        {businessContext.industry || "Painting Services"}
+                        {businessContext.industry || "Business"}
                       </p>
                     </div>
                     {businessContext.employees !== undefined && (
@@ -2599,8 +2199,6 @@ export default function DashboardPage() {
           onClose={() => setShowMemoryToast(false)}
         />
       )}
-        </div>
-      </SignedIn>
     </div>
   );
 }
