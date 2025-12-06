@@ -5,7 +5,7 @@ const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/settings(.*)"])
 
 export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) {
-    auth.protect();
+    auth.protect({ unauthenticatedUrl: "/sign-in" });
   }
   return NextResponse.next();
 });

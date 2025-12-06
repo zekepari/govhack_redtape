@@ -80,7 +80,7 @@ export default function Home() {
 
           {/* Login Button - Right */}
           <div className="justify-self-end">
-            <Link href="/dashboard" className="btn btn-primary">
+            <Link href="/sign-in" className="btn btn-primary">
               Login
             </Link>
           </div>
